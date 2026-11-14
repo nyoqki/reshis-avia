@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     // vitest stubs CSS imports (even ?raw) to "" unless included; tokens.test.ts reads index.css?raw
-    css: { include: [/index\.css/] },
+    css: { include: [/index\.css/, /board\.css/] },
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],

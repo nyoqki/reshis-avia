@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/fonts.css";
+@import "./styles/board.css";
 
 /*
  * Design tokens. Static, so Tailwind emits every variable even when it is only read

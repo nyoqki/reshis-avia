@@ -1,0 +1,109 @@
+/*
+ * Split-flap board. Cells carry no text: both leaves draw the glyph from data-char, the top leaf
+ * clipped to the upper half, the bottom leaf to the lower half, and the slot colour shows through
+ * the hinge gap between them. Motion is transform-only. Token variables only.
+ */
+
+/* the board is dark in both themes, so its focus ring is always yellow */
+.board {
+  --color-focus: var(--color-board-focus);
+}
+
+.flap-row {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
+}
+
+/* the gap that replaces the NBSP group separator in a number */
+.flap-gap {
+  width: calc(var(--spacing) * 2);
+}
+
+/* compact on phones, one step up from the sm breakpoint */
+.flap-fit {
+  font-size: var(--text-flap-xs);
+  line-height: var(--text-flap-xs--line-height);
+
+  @variant sm {
+    font-size: var(--text-flap-sm);
+    line-height: var(--text-flap-sm--line-height);
+  }
+}
+
+.flap-cell {
+  --flap-leaf: var(--color-flap);
+  --flap-leaf-hi: var(--color-flap-hi);
+  --flap-glyph: var(--color-board-ink);
+  --flap-hinge: max(1px, 0.04em);
+
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 0.8em;
+  height: 1.3em;
+  border-radius: var(--radius-cell);
+  /* the slot behind the leaves: shows as the hinge line */
+  background: var(--color-board);
+  color: var(--flap-glyph);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.flap-cell[data-tone="sign"] {
+  --flap-leaf: var(--color-sign);
+  --flap-leaf-hi: var(--color-sign);
+  --flap-glyph: var(--color-sign-ink);
+}
+
+.flap-cell::before,
+.flap-cell::after {
+  content: attr(data-char);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  white-space: pre;
+}
+
+/* a blank cell keeps its leaves but shows no glyph */
+.flap-cell[data-tone="blank"]::before,
+.flap-cell[data-tone="blank"]::after {
+  content: "";
+}
+
+/* top leaf: lit from above, folds down around the hinge */
+.flap-cell::before {
+  background: linear-gradient(to bottom, var(--flap-leaf-hi), var(--flap-leaf));
+  clip-path: inset(0 0 50% 0);
+  transform-origin: 50% 50%;
+}
+
+/* bottom leaf: starts below the hinge gap, shaded at its lower edge */
+.flap-cell::after {
+  background: linear-gradient(to bottom, var(--flap-leaf) 80%, var(--flap-leaf-hi));
+  clip-path: inset(calc(50% + var(--flap-hinge)) 0 0 0);
+  box-shadow: inset 0 calc(var(--flap-hinge) * -1) 0 var(--color-board);
+}
+
+.flap-cell--flipping::before {
+  animation: flap-flip var(--duration-fast) var(--ease-flap) infinite;
+}
+
+@keyframes flap-flip {
+  from {
+    transform: perspective(4em) rotateX(0deg);
+  }
+  to {
+    transform: perspective(4em) rotateX(-90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap-cell--flipping::before {
+    animation: none;
+  }
+}
