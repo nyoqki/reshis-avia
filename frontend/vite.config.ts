@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: { "/api": "http://127.0.0.1:8000" },
+    // tests read ../data/*.csv with ?raw
+    fs: { allow: [".."] },
   },
   test: {
     // vitest stubs CSS imports (even ?raw) to "" unless included; tokens.test.ts reads index.css?raw

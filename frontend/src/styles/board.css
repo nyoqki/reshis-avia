@@ -102,8 +102,26 @@
   }
 }
 
+/* A departures row flips in: transform and opacity only, staggered by --row (set inline). */
+[data-row-flip] {
+  animation: board-row-flip var(--duration-flap) var(--ease-flap) both;
+  animation-delay: calc(var(--row, 0) * var(--stagger-flap));
+}
+
+@keyframes board-row-flip {
+  from {
+    opacity: 0;
+    transform: perspective(40em) rotateX(-70deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(40em) rotateX(0deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .flap-cell--flipping::before {
+  .flap-cell--flipping::before,
+  [data-row-flip] {
     animation: none;
   }
 }
