@@ -50,7 +50,7 @@ const CONTROL_12000: ForecastResponse = {
   wants_raw: 412,
   buys: 412,
   free_seats: 488,
-  limit: "demand",
+  limit: "none",
   scenarios: scenarios([120, 210, 300, 360, 412, 470, 540, 640, 780], 900),
 };
 
