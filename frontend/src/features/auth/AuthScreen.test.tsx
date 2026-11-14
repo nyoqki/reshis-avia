@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -267,5 +267,69 @@ describe("AppHeader logout", () => {
     await waitFor(() => expect(onLoggedOut).toHaveBeenCalledTimes(1));
     const [call] = callsTo(fetchMock, "/api/auth/logout");
     expect(call[1]?.method).toBe("POST");
+  });
+});
+
+describe("AuthScreen layout", () => {
+  it("AC8: exactly one departures board with five routes is on the login screen", async () => {
+    stubFetch(OPEN);
+    render(<AuthScreen onAuthenticated={() => {}} />);
+    await screen.findByLabelText(/^Имя/);
+
+    expect(screen.getAllByRole("heading", { name: "Направления из Москвы" })).toHaveLength(1);
+    const tables = screen.getAllByRole("table");
+    expect(tables).toHaveLength(1);
+    expect(within(tables[0]).getAllByRole("row").slice(1)).toHaveLength(5);
+    expect(screen.getAllByText("Прогноз на 01.06–01.07.2026")).toHaveLength(1);
+  });
+
+  it("AC9: exactly one plane still image is present and no canvas is shown in jsdom", async () => {
+    stubFetch(OPEN);
+    const { container } = render(<AuthScreen onAuthenticated={() => {}} />);
+    await screen.findByLabelText(/^Имя/);
+
+    expect(container.querySelectorAll("img")).toHaveLength(1);
+    const canvases = container.querySelectorAll("canvas");
+    expect(canvases.length).toBeLessThanOrEqual(1);
+    for (const c of canvases) expect(c.dataset.visible).not.toBe("true");
+  });
+
+  it("AC1: the h1 names the product and precedes the auth card in DOM order", async () => {
+    stubFetch(OPEN);
+    render(<AuthScreen onAuthenticated={() => {}} />);
+    const heading = await screen.findByRole("heading", { level: 1 });
+    expect(heading).toHaveAccessibleName("Решись Авиа");
+    const username = screen.getByLabelText(/^Имя/);
+    const board = screen.getByRole("table");
+    expect(
+      heading.compareDocumentPosition(username) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(username.compareDocumentPosition(board) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("AC5: ArrowRight on the «Вход» tab activates «Регистрация» and shows the rules hint", async () => {
+    stubFetch(OPEN);
+    const user = userEvent.setup();
+    render(<AuthScreen onAuthenticated={() => {}} />);
+
+    const login = await screen.findByRole("tab", { name: "Вход" });
+    login.focus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(screen.getByRole("tab", { name: "Регистрация" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      await screen.findByText(
+        "Имя: 3–32 символа, латиница, цифры и знаки «_», «.», «-». Пароль: от 8 символов.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("AC5: the session-expired notice has status semantics", async () => {
+    stubFetch(OPEN);
+    render(<AuthScreen onAuthenticated={() => {}} sessionExpired />);
+    expect(await screen.findByRole("status")).toHaveTextContent("Сессия истекла, войдите снова");
   });
 });
