@@ -91,6 +91,19 @@ BASE="http://127.0.0.1:${PORT}"
 index="$(curl -fsS -H "Host: $HOST" "$BASE/")" || fail "GET / failed"
 printf '%s' "$index" | grep -qi '<html' || fail "GET / did not return HTML"
 
+step "static MIME types: woff2 font and manifest"
+css_path="$(printf '%s' "$index" | grep -oE '/assets/[^"]+\.css' | head -n 1)"
+[ -n "$css_path" ] || fail "index.html links no stylesheet"
+css="$(curl -fsS -H "Host: $HOST" "$BASE$css_path")" || fail "GET $css_path failed"
+font_path="$(printf '%s' "$css" | grep -oE '/assets/[^")]+\.woff2' | head -n 1)"
+[ -n "$font_path" ] || fail "stylesheet references no woff2"
+font_type="$(curl -fsS -o /dev/null -w '%{content_type}' -H "Host: $HOST" "$BASE$font_path")" \
+  || fail "GET $font_path failed"
+[ "${font_type%%;*}" = "font/woff2" ] || fail "$font_path content-type is $font_type"
+manifest_type="$(curl -fsS -o /dev/null -w '%{content_type}' -H "Host: $HOST" "$BASE/manifest.json")" \
+  || fail "GET /manifest.json failed"
+[ "${manifest_type%%;*}" = "application/json" ] || fail "manifest.json content-type is $manifest_type"
+
 step "demo login and control forecast"
 JAR="$TMP/cookies.txt"
 curl -fsS -c "$JAR" -H "Host: $HOST" -H "Origin: $ORIGIN" -X POST "$BASE/api/auth/demo" >/dev/null \

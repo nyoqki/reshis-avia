@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -27,6 +28,9 @@ def _is_reserved(path: str) -> bool:
 
 
 def mount_frontend(app: FastAPI, static_dir: Path) -> None:
+    # Python 3.12's built-in table lacks these and the slim image has no /etc/mime.types.
+    mimetypes.add_type("font/woff2", ".woff2")
+    mimetypes.add_type("image/webp", ".webp")
     root = static_dir.resolve()
     index = root / "index.html"
     assets = root / "assets"
