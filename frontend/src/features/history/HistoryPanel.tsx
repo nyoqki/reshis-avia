@@ -22,13 +22,17 @@ function routeLabel(item: HistoryItem): string {
   return `${item.origin} → ${item.destination}`;
 }
 
-export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) {
+// A new refreshKey remounts the list, which refetches the history from scratch.
+export function HistoryPanel({ refreshKey, ...rest }: Props) {
+  return <HistoryList key={refreshKey} {...rest} />;
+}
+
+function HistoryList({ onSelect, onSessionExpired }: Omit<Props, "refreshKey">) {
   const [state, setState] = useState<State>({ status: "loading" });
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
   const latest = useRef(0);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is the refetch trigger
   const load = useCallback(() => {
     const id = ++latest.current;
     setState({ status: "loading" });
@@ -48,7 +52,7 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
           message: e instanceof ApiError ? e.detail : "Что-то пошло не так. Попробуйте ещё раз.",
         });
       });
-  }, [refreshKey]);
+  }, []);
 
   useEffect(() => {
     load();
