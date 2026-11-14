@@ -2,6 +2,7 @@
 
 import sqlite3
 import threading
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
+from rehis.auth import passwords
 from rehis.auth.demo import seed_demo_user
 from rehis.auth.passwords import hash_password, needs_rehash, verify_password
 from rehis.auth.schemas import AuthOptions
@@ -158,3 +160,48 @@ def test_seed_demo_user_never_takes_over_a_regular_account_with_its_own_password
     assert user.is_demo is False
     assert user.password_hash == original_hash
     assert count_users(conn, include_demo=True) == 1
+
+
+class _SlowHasher:
+    """Stands in for PasswordHasher and records how many calls overlap."""
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.active = 0
+        self.peak = 0
+
+    def _work(self) -> None:
+        with self.lock:
+            self.active += 1
+            self.peak = max(self.peak, self.active)
+        time.sleep(0.05)
+        with self.lock:
+            self.active -= 1
+
+    def hash(self, password: str) -> str:
+        self._work()
+        return "hash"
+
+    def verify(self, password_hash: str, password: str) -> bool:
+        self._work()
+        return True
+
+
+def test_argon2_calls_are_capped_so_a_login_burst_cannot_exhaust_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # argon2id with library defaults takes 64 MiB per call, and the sync auth endpoints run in a
+    # threadpool of about 40 threads: without a cap a burst of logins could claim gigabytes.
+    slow = _SlowHasher()
+    monkeypatch.setattr(passwords, "_hasher", slow)
+    calls: list[Callable[[], object]] = [
+        lambda: passwords.hash_password("p"),
+        lambda: passwords.verify_password("h", "p"),
+        lambda: passwords.burn_verification_time("p"),
+    ] * 6
+    threads = [threading.Thread(target=call) for call in calls]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert 1 < slow.peak <= passwords.MAX_CONCURRENT_HASHES
