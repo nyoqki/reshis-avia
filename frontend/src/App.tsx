@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { AppHeader } from "./components/AppHeader";
 import { AuthScreen } from "./features/auth/AuthScreen";
+import { ForecastPage } from "./features/forecast/ForecastPage";
 import { useSession } from "./hooks/useSession";
 import { applyTheme, getStoredTheme } from "./lib/theme";
 
@@ -32,8 +33,7 @@ export default function App() {
     <>
       <AppHeader user={session.user} onLoggedOut={() => session.setUser(null)} />
       <main className="shell">
-        {/* ForecastPage slot (T12) */}
-        <div data-slot="forecast" />
+        <ForecastPage onSessionExpired={session.markExpired} />
       </main>
     </>
   );
