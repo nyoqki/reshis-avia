@@ -4,6 +4,7 @@ import { ApiError, api } from "../../api/client";
 import type { ForecastRequest, ForecastResponse, RoutesResponse } from "../../api/types";
 import { ForecastForm } from "./ForecastForm";
 import { ResultPanel } from "./ResultPanel";
+import { ScenarioChart } from "./ScenarioChart";
 
 interface Props {
   onSessionExpired: () => void;
@@ -154,7 +155,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
             onUseRecommended={(price) => setValue((v) => (v ? { ...v, price } : v))}
           />
         ) : null}
-        <div data-slot="scenario-chart" />
+        {result ? <ScenarioChart result={result} /> : null}
         <div data-slot="history" />
       </div>
     </div>
