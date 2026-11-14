@@ -23,7 +23,9 @@ describe("DataTable", () => {
     render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.id} caption="Рейсы" />);
     const headers = screen.getAllByRole("columnheader");
     expect(headers.map((h) => h.textContent)).toEqual(["Рейс", "Цена"]);
-    headers.forEach((h) => expect(h).toHaveAttribute("scope", "col"));
+    for (const h of headers) {
+      expect(h).toHaveAttribute("scope", "col");
+    }
     const body = screen.getAllByRole("row").slice(1);
     expect(body).toHaveLength(2);
     expect(within(body[0]).getByText("Рейс А")).toBeInTheDocument();
@@ -34,7 +36,9 @@ describe("DataTable", () => {
     render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.id} />);
     const rowHeaders = screen.getAllByRole("rowheader");
     expect(rowHeaders.map((h) => h.textContent)).toEqual(["Рейс А", "Рейс Б"]);
-    rowHeaders.forEach((h) => expect(h).toHaveAttribute("scope", "row"));
+    for (const h of rowHeaders) {
+      expect(h).toHaveAttribute("scope", "row");
+    }
   });
 
   it("AC5: rowProps data attributes reach the tr; numeric cells carry font-mono", () => {
