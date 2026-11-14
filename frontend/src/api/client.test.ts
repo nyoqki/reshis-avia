@@ -2,8 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, api, request } from "./client";
 
-const NETWORK_MESSAGE =
-  "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.";
+const NETWORK_MESSAGE = "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.";
 
 function jsonResponse(body: unknown, status: number, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
@@ -18,9 +17,11 @@ afterEach(() => {
 
 describe("request", () => {
   it("AC15: maps a 422 body to ApiError with detail and fields", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ detail: "Проверьте поля", fields: { price: "Слишком мало" } }, 422),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ detail: "Проверьте поля", fields: { price: "Слишком мало" } }, 422),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     const err = await request("POST", "/api/forecast", {}).catch((e: unknown) => e);
@@ -60,7 +61,9 @@ describe("request", () => {
   });
 
   it("sends JSON Content-Type and same-origin credentials on POST", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ username: "a", is_demo: false }, 200));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ username: "a", is_demo: false }, 200));
     vi.stubGlobal("fetch", fetchMock);
 
     await request("POST", "/api/login", { username: "a", password: "b" });

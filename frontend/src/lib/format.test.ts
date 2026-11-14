@@ -42,7 +42,9 @@ describe("formatRub", () => {
   });
 
   it("groups larger numbers", () => {
-    expect(formatRub(1234567)).toMatch(new RegExp(`^1[${NBSP}${NNBSP}]234[${NBSP}${NNBSP}]567${NBSP}₽$`));
+    expect(formatRub(1234567)).toMatch(
+      new RegExp(`^1[${NBSP}${NNBSP}]234[${NBSP}${NNBSP}]567${NBSP}₽$`),
+    );
   });
 });
 
