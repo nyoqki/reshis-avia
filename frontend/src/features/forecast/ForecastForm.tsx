@@ -68,7 +68,7 @@ export function ForecastForm({ routes, value, onChange, onSubmit, pending, error
       noValidate
       className="grid gap-4 rounded-xl border border-border bg-surface p-5"
     >
-      <Field id="forecast-origin" label="Откуда">
+      <Field id="forecast-origin" label="Город вылета">
         <input
           id="forecast-origin"
           type="text"
