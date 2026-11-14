@@ -40,8 +40,9 @@ const NO_DEMAND: ForecastResponse = {
   date: "2026-06-01",
   price: 20000,
   seats: 1440,
-  wants: -3120,
-  wants_raw: -3120,
+  // the API clamps `wants` at 0 and sends the raw figure only in `wants_raw`
+  wants: 0,
+  wants_raw: -3120.0,
   buys: 0,
   free_seats: 1440,
   limit: "no_demand",
@@ -134,6 +135,13 @@ describe("ResultPanel", () => {
     expect(screen.getByText(/9\s500\s₽/)).toBeVisible();
     expect(screen.getByText(/8\s500/)).toBeVisible();
     expect(screen.getByText(/10\s200/)).toBeVisible();
+  });
+
+  it("AC14: corridor_pct is labelled as the full corridor width, not a ± deviation", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    const corridor = screen.getByText(/^Коридор:/);
+    expect(corridor).toHaveTextContent(/ширина 12\s%/);
+    expect(corridor).not.toHaveTextContent("±");
   });
 
   it("AC14: «Подставить» calls onUseRecommended with the recommended price", async () => {

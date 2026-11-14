@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterator
 from ipaddress import ip_address
 from typing import Any
 
@@ -238,3 +239,35 @@ def test_non_ip_peer_is_untrusted_and_returned_as_is() -> None:
 
 def test_missing_client_is_unknown() -> None:
     assert client_ip(_request(None, "1.2.3.4"), TRUSTED) == "unknown"
+
+
+def test_declared_oversized_body_is_413(client: TestClient) -> None:
+    payload = b'{"username": "' + b"a" * 20_000 + b'", "password": "x"}'
+
+    response = client.post(
+        "/api/auth/login", content=payload, headers={"Content-Type": "application/json"}
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Слишком большой запрос"}
+
+
+def test_streamed_oversized_body_is_413(client: TestClient) -> None:
+    def chunks() -> Iterator[bytes]:
+        yield b'{"username": "'
+        for _ in range(20):
+            yield b"a" * 1024
+        yield b'", "password": "x"}'
+
+    response = client.post(
+        "/api/auth/login", content=chunks(), headers={"Content-Type": "application/json"}
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Слишком большой запрос"}
+
+
+def test_small_json_body_is_not_limited(client: TestClient) -> None:
+    response = client.post("/api/auth/login", json={"username": "nobody", "password": "x" * 12})
+
+    assert response.status_code == 401

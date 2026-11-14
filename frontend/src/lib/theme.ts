@@ -12,18 +12,19 @@ export function getStoredTheme(): Theme {
   return "system";
 }
 
-function systemPrefersDark(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
 export function applyTheme(t: Theme): void {
   try {
     window.localStorage.setItem(KEY, t);
   } catch {
     // storage unavailable
   }
-  const resolved = t === "system" ? (systemPrefersDark() ? "dark" : "light") : t;
-  document.documentElement.setAttribute("data-theme", resolved);
-  document.documentElement.style.colorScheme = resolved;
+  const root = document.documentElement;
+  if (t === "system") {
+    // Unpinned, the prefers-color-scheme rules in index.css follow the OS, also when it changes.
+    root.removeAttribute("data-theme");
+    root.style.colorScheme = "";
+    return;
+  }
+  root.setAttribute("data-theme", t);
+  root.style.colorScheme = t;
 }

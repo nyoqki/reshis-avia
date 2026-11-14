@@ -8,7 +8,7 @@ from starlette.types import Scope
 
 IMMUTABLE_CACHE = "public, max-age=31536000, immutable"
 NO_CACHE = "no-cache"
-RESERVED_PREFIXES = ("api", "docs", "docs-assets", "openapi.json")
+RESERVED_PREFIXES = ("api", "docs", "docs-assets", "openapi.json", "redoc")
 
 
 class ImmutableStaticFiles(StaticFiles):

@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { ForecastResponse, Scenario } from "../../api/types";
-import { buildChartModel } from "./chartData";
+import { buildChartModel, tickLabel } from "./chartData";
 
 const QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
 
 function scenarios(wants: number[], seats: number): Scenario[] {
   return QUANTILES.map((quantile, i) => ({
     quantile,
-    wants: wants[i],
+    // the API clamps `wants` at 0 and sends the raw figure only in `wants_raw`
+    wants: Math.max(0, wants[i]),
     wants_raw: wants[i],
     buys: Math.max(0, Math.min(wants[i], seats)),
     hits_seats: wants[i] >= seats,
@@ -71,8 +72,8 @@ const NEGATIVE: ForecastResponse = {
   route: "MOW-LED",
   price: 20000,
   seats: 1440,
-  wants: -3120,
-  wants_raw: -3120,
+  wants: 0,
+  wants_raw: -3120.0,
   buys: 0,
   free_seats: 1440,
   limit: "no_demand",
@@ -137,5 +138,12 @@ describe("buildChartModel", () => {
     expect(model.rawValues[0]).toBe(-5000);
     expect(model.rawValues[4]).toBe(-3120);
     expect(model.values[4]).toBe(0);
+  });
+
+  it("AC12: the axis ticks keep the scenario names for 10 %, 50 % and 90 %", () => {
+    expect(tickLabel(0.1)).toEqual([expect.stringMatching(/^10\s%$/), "пессимистичный"]);
+    expect(tickLabel(0.5)).toEqual([expect.stringMatching(/^50\s%$/), "медиана"]);
+    expect(tickLabel(0.9)).toEqual([expect.stringMatching(/^90\s%$/), "оптимистичный"]);
+    expect(tickLabel(0.2)).toMatch(/^20\s%$/);
   });
 });

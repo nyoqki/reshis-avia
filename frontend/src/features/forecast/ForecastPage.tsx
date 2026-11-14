@@ -7,6 +7,7 @@ import type {
   HistoryItem,
   RoutesResponse,
 } from "../../api/types";
+import { displayWants, formatInt } from "../../lib/format";
 import { HistoryPanel } from "../history/HistoryPanel";
 import { ForecastForm } from "./ForecastForm";
 import { ResultPanel } from "./ResultPanel";
@@ -32,6 +33,10 @@ function waitMessage(retryAfter: number | null): string {
   return `Слишком много запросов. Подождите ${Math.ceil(retryAfter / 60)} мин и попробуйте снова.`;
 }
 
+function announcement(result: ForecastResponse): string {
+  return `Прогноз готов. Желают купить: ${formatInt(displayWants(result.wants))}, купят: ${formatInt(result.buys)}, мест в самолёте: ${formatInt(result.seats)}.`;
+}
+
 function initialValue(routes: RoutesResponse): ForecastRequest {
   const first = routes.routes[0];
   return {
@@ -51,6 +56,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const inFlight = useRef(false);
+  const formArea = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
@@ -127,6 +133,8 @@ export function ForecastPage({ onSessionExpired }: Props) {
     });
     setFieldErrors({});
     setFormError(null);
+    // On a phone the form sits above the history, off-screen: bring it back with focus.
+    formArea.current?.querySelector<HTMLElement>("#forecast-destination")?.focus();
   }
 
   if (state.status === "loading") {
@@ -148,7 +156,10 @@ export function ForecastPage({ onSessionExpired }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
-      <div className="grid gap-4">
+      <p role="status" className="sr-only">
+        {result ? announcement(result) : ""}
+      </p>
+      <div ref={formArea} className="grid gap-4">
         <ForecastForm
           routes={state.routes}
           value={value}

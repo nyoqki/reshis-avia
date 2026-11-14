@@ -22,12 +22,8 @@ function routeLabel(item: HistoryItem): string {
   return `${item.origin} → ${item.destination}`;
 }
 
-// A new refreshKey remounts the list, which refetches the history from scratch.
-export function HistoryPanel({ refreshKey, ...rest }: Props) {
-  return <HistoryList key={refreshKey} {...rest} />;
-}
-
-function HistoryList({ onSelect, onSessionExpired }: Omit<Props, "refreshKey">) {
+// A new refreshKey refetches the history; the current list stays on screen meanwhile.
+export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) {
   const [state, setState] = useState<State>({ status: "loading" });
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
@@ -35,7 +31,7 @@ function HistoryList({ onSelect, onSessionExpired }: Omit<Props, "refreshKey">) 
 
   const load = useCallback(() => {
     const id = ++latest.current;
-    setState({ status: "loading" });
+    setState((s) => (s.status === "ready" ? s : { status: "loading" }));
     api
       .history()
       .then((r) => {
@@ -55,11 +51,12 @@ function HistoryList({ onSelect, onSessionExpired }: Omit<Props, "refreshKey">) 
   }, []);
 
   useEffect(() => {
+    void refreshKey; // the parent bumps it after each forecast to request a refetch
     load();
     return () => {
       latest.current++;
     };
-  }, [load]);
+  }, [load, refreshKey]);
 
   return (
     <section aria-labelledby="history-title" className="grid gap-3">

@@ -15,7 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ForecastResponse } from "../../api/types";
 import { formatInt } from "../../lib/format";
-import { type BarKind, buildChartModel } from "./chartData";
+import { type BarKind, buildChartModel, tickLabel } from "./chartData";
 
 Chart.register(
   BarController,
@@ -148,8 +148,10 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
               color: palette.muted,
               maxRotation: 0,
               autoSkip: false,
-              // the nine long labels collide on a phone; the table below carries the full names
-              callback: (_value, index) => `${model.labels[index].split(/\s/)[0]}${NBSP}%`,
+              // only three ticks carry a name, on a second line; a smaller size keeps the nine
+              // percentages apart on a phone
+              font: (ctx) => ({ size: ctx.chart.width < 480 ? 10 : 12 }),
+              callback: (_value, index) => tickLabel(result.scenarios[index].quantile),
             },
             grid: { display: false },
             border: { color: palette.border },

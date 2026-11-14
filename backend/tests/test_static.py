@@ -136,3 +136,10 @@ def test_missing_static_dir_logs_warning_and_app_still_starts(
     with TestClient(app) as test_client:
         assert test_client.get("/api/health").status_code == 200
         assert test_client.get("/").status_code == 404
+
+
+def test_redoc_is_not_served_with_frontend_mounted(spa_client: TestClient) -> None:
+    response = spa_client.get("/redoc")
+
+    assert response.status_code == 404
+    assert "spa-index-marker" not in response.text

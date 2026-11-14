@@ -3,6 +3,7 @@ from collections.abc import Iterable
 
 from fastapi import FastAPI
 from starlette.datastructures import Headers, MutableHeaders
+from starlette.exceptions import HTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 FOREIGN_ORIGIN_DETAIL = "Запрос отклонён: недопустимый источник"
 NOT_JSON_DETAIL = "Отправляйте данные в формате JSON"
+TOO_LARGE_DETAIL = "Слишком большой запрос"
+# The largest legitimate body (a forecast request or credentials) is well under 1 KiB.
+MAX_BODY_BYTES = 16 * 1024
 
 
 def _csp(script_src: str) -> str:
@@ -91,8 +95,32 @@ class SecurityHeadersMiddleware:
             await internal_error_response()(scope, receive, send_with_headers)
 
 
+def _declared_length(headers: Headers) -> int:
+    try:
+        return int(headers.get("content-length", "0"))
+    except ValueError:
+        return 0
+
+
+def _capped(receive: Receive) -> Receive:
+    """Stop reading a streamed body once it passes MAX_BODY_BYTES."""
+    received = 0
+
+    async def capped_receive() -> Message:
+        nonlocal received
+        message = await receive()
+        if message["type"] == "http.request":
+            received += len(message.get("body", b""))
+            if received > MAX_BODY_BYTES:
+                # FastAPI re-raises HTTPException from body reading; the error handler renders it.
+                raise HTTPException(status_code=413)
+        return message
+
+    return capped_receive
+
+
 class RequestGuardMiddleware:
-    """CSRF mitigation for unsafe /api requests: Origin allowlist and JSON-only bodies."""
+    """CSRF mitigation for unsafe /api requests: Origin allowlist, JSON-only, capped bodies."""
 
     def __init__(self, app: ASGIApp, allowed_origins: Iterable[str]) -> None:
         self.app = app
@@ -118,7 +146,10 @@ class RequestGuardMiddleware:
             if content_type.split(";", 1)[0].strip().lower() != "application/json":
                 await error_response(415, NOT_JSON_DETAIL)(scope, receive, send)
                 return
-            await self.app(scope, receive, send)
+            if _declared_length(headers) > MAX_BODY_BYTES:
+                await error_response(413, TOO_LARGE_DETAIL)(scope, receive, send)
+                return
+            await self.app(scope, _capped(receive), send)
             return
 
         # No Content-Type: allowed only with an empty body. Read the first message to check,

@@ -97,6 +97,12 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
   const isLogin = mode === "login";
   const registrationClosed = !isLogin && !options.registration_open;
   const busy = pending !== null;
+  // Shared by the form and the closed-registration notice: a demo-login error must show in both.
+  const formAlert = errors.form ? (
+    <p role="alert" className="text-sm text-danger">
+      {errors.form}
+    </p>
+  ) : null;
 
   return (
     <div className="mx-auto w-full max-w-md py-8">
@@ -128,14 +134,17 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
         </div>
 
         {registrationClosed ? (
-          <p role="status" className="py-4 text-center text-muted">
-            Регистрация закрыта
-          </p>
+          <div className="grid gap-2">
+            <p role="status" className="py-4 text-center text-muted">
+              Регистрация закрыта
+            </p>
+            {formAlert}
+          </div>
         ) : (
           <form onSubmit={onSubmit} noValidate className="grid gap-4">
             {!isLogin ? (
               <p className="text-sm text-muted">
-                Имя: 3–32 символа, латиница, цифры и знаки _ . - Пароль — от 8 символов.
+                Имя: 3–32 символа, латиница, цифры и знаки «_», «.», «-». Пароль: от 8 символов.
               </p>
             ) : null}
 
@@ -187,11 +196,7 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
               ) : null}
             </div>
 
-            {errors.form ? (
-              <p role="alert" className="text-sm text-danger">
-                {errors.form}
-              </p>
-            ) : null}
+            {formAlert}
 
             <button type="submit" disabled={busy} className={PRIMARY}>
               {pending === "form"

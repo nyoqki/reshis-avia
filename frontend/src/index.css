@@ -2,6 +2,8 @@
 @import "@fontsource-variable/inter/index.css";
 
 :root {
+  /* native controls follow the OS in «Авто»; a pinned theme overrides this inline */
+  color-scheme: light dark;
   --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bg: #f6f7f9;
   --surface: #ffffff;

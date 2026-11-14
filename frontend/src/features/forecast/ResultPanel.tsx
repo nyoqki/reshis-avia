@@ -27,7 +27,9 @@ const VALUE = "text-2xl font-semibold tabular-nums tracking-tight";
 
 export function ResultPanel({ result, onUseRecommended }: Props) {
   const { recommendation: rec } = result;
-  const negative = result.wants < 0;
+  // `wants` arrives clamped at 0; only `wants_raw` carries the negative calculation.
+  const raw = Math.round(result.wants_raw);
+  const negative = raw < 0;
 
   return (
     <section aria-label="Результат прогноза" className="grid gap-4">
@@ -38,9 +40,7 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
         <Card label="Желают купить">
           <span className={VALUE}>{formatInt(displayWants(result.wants))}</span>
           {negative ? (
-            <span className="text-xs text-muted">
-              расчёт: {formatInt(result.wants).replace("-", "−")}
-            </span>
+            <span className="text-xs text-muted">расчёт: {formatInt(raw).replace("-", "−")}</span>
           ) : null}
         </Card>
         <Card label="Купят">
@@ -75,7 +75,7 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
           </button>
         </div>
         <p className="text-sm text-muted">
-          {`Коридор: ${formatInt(rec.corridor_low)}–${formatRub(rec.corridor_high)} (±${rec.corridor_pct} %)`}
+          {`Коридор: ${formatInt(rec.corridor_low)}–${formatRub(rec.corridor_high)}, ширина ${rec.corridor_pct} % от рекомендованной цены`}
         </p>
         {rec.risky ? (
           <p className="w-fit rounded-full border border-demand-hits px-3 py-0.5 text-sm font-medium text-demand-hits-text">

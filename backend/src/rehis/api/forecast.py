@@ -17,11 +17,13 @@ from rehis.api.schemas import (
     SelloutOut,
 )
 from rehis.auth.deps import current_user
+from rehis.config import Settings
 from rehis.db import NewCalculation, User, add_calculation, get_db, list_calculations
 from rehis.domain.data import ForecastData
 from rehis.domain.engine import compute_forecast, round_people
 from rehis.domain.trip import TripError, resolve_trip
 from rehis.errors import VALIDATION_DETAIL, ApiError
+from rehis.security.net import client_ip, parse_networks
 from rehis.security.ratelimit import Limiters
 
 router = APIRouter()
@@ -62,7 +64,12 @@ def forecast(
     body: ForecastRequest, request: Request, conn: Db, user: CurrentUser
 ) -> ForecastResponse:
     limiters: Limiters = request.app.state.limiters
-    limiters.forecast_user.hit(str(user.id))
+    key = str(user.id)
+    if user.is_demo:
+        # Every demo visitor shares one account; give each client address its own budget.
+        settings: Settings = request.app.state.settings
+        key = f"{key}:{client_ip(request, parse_networks(settings.trusted_proxies))}"
+    limiters.forecast_user.hit(key)
     try:
         route, flight = resolve_trip(_data(request), body.origin, body.destination, body.date)
     except TripError as exc:

@@ -86,10 +86,18 @@ def register(body: RegisterRequest, request: Request, response: Response, conn: 
     _limiters(request).register_ip.hit(_ip(request, settings))
     if not _registration_open(conn, settings):
         raise ApiError(403, REGISTRATION_CLOSED_DETAIL)
+    password_hash = hash_password(body.password)
+    # Re-check the cap and insert under one write lock, so concurrent sign-ups cannot pass it.
+    conn.execute("BEGIN IMMEDIATE")
     try:
-        user = create_user(conn, body.username, hash_password(body.password))
+        if not _registration_open(conn, settings):
+            raise ApiError(403, REGISTRATION_CLOSED_DETAIL)
+        user = create_user(conn, body.username, password_hash)
     except UsernameTakenError:
         raise ApiError(409, USERNAME_TAKEN_DETAIL) from None
+    finally:
+        if conn.in_transaction:
+            conn.rollback()
     return _log_in(conn, request, response, user, settings)
 
 

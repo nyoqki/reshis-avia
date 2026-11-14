@@ -1,11 +1,15 @@
+import threading
 from collections.abc import Callable, Iterator
 
 import pytest
+from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 
+from rehis.auth.passwords import hash_password, needs_rehash, verify_password
 from rehis.auth.schemas import AuthOptions, UserOut
 from rehis.auth.sessions import SESSION_COOKIE
 from rehis.config import Settings
+from rehis.db import connect, create_user, get_user_by_username
 from rehis.main import create_app
 
 PASSWORD = "correct-horse-1"
@@ -143,18 +147,68 @@ def test_eleventh_login_from_one_ip_is_429_with_retry_after(client: TestClient) 
 
 
 def test_eleventh_login_for_one_username_is_429(client: TestClient) -> None:
-    for _ in range(10):
-        response = client.post(
-            "/api/auth/login", json={"username": "Alice", "password": "wrong-password"}
+    def from_ip(n: int) -> TestClient:
+        # A distinct client address per request keeps the per-IP limiter out of the way.
+        return TestClient(client.app, client=(f"203.0.113.{n}", 50000))
+
+    spellings = ["Alice", "ALICE", "alice", "aLiCe", "AlIcE"]
+    for i in range(10):
+        response = from_ip(i).post(
+            "/api/auth/login", json={"username": spellings[i % 5], "password": "wrong-password"}
         )
         assert response.status_code == 401
 
-    response = client.post(
+    response = from_ip(10).post(
         "/api/auth/login", json={"username": "alice", "password": "wrong-password"}
     )
 
     assert response.status_code == 429
     assert "Retry-After" in response.headers
+    other = from_ip(11).post(
+        "/api/auth/login", json={"username": "bob", "password": "wrong-password"}
+    )
+    assert other.status_code == 401
+
+
+def test_login_rehashes_a_password_with_outdated_parameters(
+    client: TestClient, settings: Settings
+) -> None:
+    weak_hash = PasswordHasher(time_cost=1, memory_cost=8, parallelism=1).hash(PASSWORD)
+    conn = connect(settings.db_path)
+    try:
+        create_user(conn, "alice", weak_hash)
+    finally:
+        conn.close()
+
+    assert (
+        client.post("/api/auth/login", json={"username": "alice", "password": PASSWORD}).status_code
+        == 200
+    )
+
+    conn = connect(settings.db_path)
+    try:
+        user = get_user_by_username(conn, "alice")
+    finally:
+        conn.close()
+    assert user is not None
+    assert user.password_hash != weak_hash
+    assert not needs_rehash(user.password_hash)
+    assert verify_password(user.password_hash, PASSWORD)
+    client.post("/api/auth/logout")
+    assert (
+        client.post("/api/auth/login", json={"username": "alice", "password": PASSWORD}).status_code
+        == 200
+    )
+
+
+def test_thirty_first_demo_login_from_one_ip_is_429(client: TestClient) -> None:
+    for _ in range(30):
+        assert client.post("/api/auth/demo").status_code == 200
+
+    response = client.post("/api/auth/demo")
+
+    assert response.status_code == 429
+    assert int(response.headers["Retry-After"]) >= 1
 
 
 def test_sixth_registration_from_one_ip_is_429(client: TestClient) -> None:
@@ -255,6 +309,37 @@ def test_registration_closed_at_max_users(make_client: MakeClient) -> None:
 
     assert response.status_code == 403
     assert response.json()["detail"] == CLOSED_DETAIL
+    options = AuthOptions.model_validate(client.get("/api/auth/options").json())
+    assert options.registration_open is False
+
+
+def test_concurrent_registrations_cannot_exceed_max_users(
+    make_client: MakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = make_client(max_users=1)
+    both_checked = threading.Barrier(2, timeout=5)
+
+    def slow_hash(password: str) -> str:
+        # Both requests have passed the early cap check before either inserts.
+        both_checked.wait()
+        return hash_password(password)
+
+    monkeypatch.setattr("rehis.auth.router.hash_password", slow_hash)
+    statuses: list[int] = []
+
+    def attempt(name: str) -> None:
+        response = TestClient(client.app).post(
+            "/api/auth/register", json={"username": name, "password": PASSWORD}
+        )
+        statuses.append(response.status_code)
+
+    threads = [threading.Thread(target=attempt, args=(name,)) for name in ("alice", "bob")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert sorted(statuses) == [201, 403]
     options = AuthOptions.model_validate(client.get("/api/auth/options").json())
     assert options.registration_open is False
 

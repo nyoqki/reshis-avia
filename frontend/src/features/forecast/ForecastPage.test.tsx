@@ -129,6 +129,23 @@ describe("ForecastPage submit", () => {
     expect(screen.getByText("Желают купить")).toBeVisible();
   });
 
+  it("AC19: a new result is announced through a polite live region", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.forecast).mockResolvedValue(RESPONSE);
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent("");
+
+    await submit(user);
+
+    await waitFor(() =>
+      expect(status).toHaveTextContent(
+        /Прогноз готов\. Желают купить: 970, купят: 900, мест в самолёте: 900\./,
+      ),
+    );
+  });
+
   it("AC19: a submit failing with status 0 shows the network message and «Повторить» resubmits", async () => {
     vi.mocked(api.routes).mockResolvedValue(ROUTES);
     vi.mocked(api.forecast)
@@ -209,6 +226,7 @@ describe("ForecastPage history", () => {
     expect(screen.getByLabelText("Куда")).toHaveValue("Казань");
     expect(screen.getByLabelText("Дата вылета")).toHaveValue("2026-06-20");
     expect(screen.getByLabelText("Цена билета, ₽")).toHaveValue(8300);
+    expect(screen.getByLabelText("Куда")).toHaveFocus();
   });
 
   it("AC16: a successful forecast refetches the history", async () => {
