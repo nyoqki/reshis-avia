@@ -13,6 +13,7 @@ from rehis.domain.data import load_forecast_data
 from rehis.errors import install_error_handlers
 from rehis.security.middleware import install_security
 from rehis.security.ratelimit import default_limiters
+from rehis.static import mount_frontend
 
 logger = logging.getLogger(__name__)
 
@@ -37,4 +38,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(forecast_api.router, prefix="/api")
+    if settings.static_dir is not None:
+        if settings.static_dir.is_dir():
+            mount_frontend(app, settings.static_dir)
+        else:
+            logger.warning(
+                "REHIS_STATIC_DIR %s does not exist; frontend not served", settings.static_dir
+            )
     return app
