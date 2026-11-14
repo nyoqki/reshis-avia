@@ -1,68 +1,215 @@
 @import "tailwindcss";
 @import "./styles/fonts.css";
 
+/*
+ * Design tokens. Static, so Tailwind emits every variable even when it is only read
+ * through var(--…) in TSX, SVG or board.css.
+ * Spacing steps in use: 1, 2, 3, 4, 6, 8, 12, 16 (4…64 px at --spacing 0.25rem).
+ */
+@theme static {
+  --font-sans: "Golos Text", "Golos Text Fallback", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+
+  --color-paper: oklch(0.972 0.005 90);
+  --color-paper-raised: oklch(0.995 0.002 90);
+  --color-paper-sunken: oklch(0.938 0.006 90);
+  --color-ink: oklch(0.22 0.01 260);
+  --color-ink-2: oklch(0.46 0.012 260);
+  --color-line: oklch(0.885 0.006 90);
+  --color-line-strong: oklch(0.6 0.01 260);
+  --color-sign: oklch(0.87 0.17 92);
+  --color-sign-hover: oklch(0.83 0.165 88);
+  --color-sign-ink: oklch(0.22 0.01 260);
+  --color-sign-edge: oklch(0.6 0.13 85);
+  --color-board: oklch(0.18 0.01 260);
+  --color-board-edge: oklch(0.18 0.01 260);
+  --color-board-line: oklch(0.34 0.01 260);
+  --color-board-ink: oklch(0.95 0.012 90);
+  --color-board-ink-2: oklch(0.8 0.01 260);
+  --color-flap: oklch(0.255 0.01 260);
+  --color-flap-hi: oklch(0.285 0.01 260);
+  --color-bar: oklch(0.56 0.012 260);
+  --color-danger: oklch(0.5 0.17 27);
+  --color-warning: oklch(0.5 0.11 65);
+  --color-success: oklch(0.5 0.12 150);
+  --color-board-danger: oklch(0.83 0.085 25);
+  --color-board-warning: oklch(0.84 0.11 70);
+  --color-focus: oklch(0.22 0.01 260);
+  /* focus ring on the always-dark board: yellow in both themes */
+  --color-board-focus: oklch(0.87 0.17 92);
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-flap-xs: 1.25rem;
+  --text-flap-xs--line-height: 1;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5625rem;
+  --text-xl--line-height: 2rem;
+  --text-flap-sm: 1.9375rem;
+  --text-flap-sm--line-height: 1;
+  --text-flap-md: 2.4375rem;
+  --text-flap-md--line-height: 1;
+  --text-flap-lg: 3.0625rem;
+  --text-flap-lg--line-height: 1;
+  --text-axis: 0.75rem;
+  --text-axis--line-height: 1rem;
+
+  --spacing: 0.25rem;
+
+  --radius-cell: 2px;
+  --radius-control: 4px;
+  --radius-board: 8px;
+
+  --ease-flap: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-flap: 380ms;
+  --duration-settle: 1000ms;
+  --stagger-flap: 45ms;
+  --duration-grow: 600ms;
+  --duration-fast: 150ms;
+}
+
 :root {
   /* native controls follow the OS in «Авто»; a pinned theme overrides this inline */
   color-scheme: light dark;
-  --font-sans: "Golos Text", "Golos Text Fallback", system-ui, sans-serif;
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --text: #14181f;
-  --muted: #5a6472;
-  --border: #d9dee6;
-  --accent: #1f5fd1;
-  --accent-text: #ffffff;
-  --danger: #b3261e;
-  /* chart / status tokens, colour-blind safe (blue / orange + a dashed seats line) */
-  --demand-below: #0072b2;
-  --demand-hits: #d55e00;
-  /* text-safe variant of --demand-hits: the bar colour is only 3.9:1 on white, small text needs 4.5:1 */
-  --demand-hits-text: #a84700;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1116;
-    --surface: #171b22;
-    --text: #e8ebf0;
-    --muted: #b3bdca;
-    --border: #2b323d;
-    --accent: #8fb5ff;
-    --accent-text: #0e1116;
-    /* light enough for 14 px error text on the surface: APCA Lc -71 (the earlier #ff8a80 was -56) */
-    --danger: #ffb4ab;
-    --demand-below: #56b4e9;
-    --demand-hits: #ffa04d;
-    --demand-hits-text: #ffa04d;
+    /* dark page background */
+    --color-paper: oklch(0.205 0.01 260);
+    /* cards and inputs sit lighter than the page */
+    --color-paper-raised: oklch(0.25 0.01 260);
+    /* wells sit darker than the page */
+    --color-paper-sunken: oklch(0.175 0.01 260);
+    /* primary text, near-white */
+    --color-ink: oklch(0.945 0.01 90);
+    /* secondary text */
+    --color-ink-2: oklch(0.8 0.01 260);
+    /* hairlines */
+    --color-line: oklch(0.31 0.01 260);
+    /* control borders, at least 3:1 on paper-raised */
+    --color-line-strong: oklch(0.55 0.01 260);
+    /* hover on yellow controls is lighter in dark */
+    --color-sign-hover: oklch(0.91 0.14 95);
+    /* yellow edge on a dark page */
+    --color-sign-edge: oklch(0.87 0.17 92);
+    /* board a step darker than the page */
+    --color-board: oklch(0.155 0.01 260);
+    /* visible frame around the board on a dark page */
+    --color-board-edge: oklch(0.34 0.01 260);
+    /* board rules */
+    --color-board-line: oklch(0.31 0.01 260);
+    /* flap cell */
+    --color-flap: oklch(0.245 0.01 260);
+    /* flap cell highlight */
+    --color-flap-hi: oklch(0.275 0.01 260);
+    /* error text, light for a dark page */
+    --color-danger: oklch(0.83 0.085 25);
+    /* warning text */
+    --color-warning: oklch(0.84 0.11 70);
+    /* success text */
+    --color-success: oklch(0.82 0.12 150);
+    /* focus ring turns yellow */
+    --color-focus: oklch(0.87 0.17 92);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0e1116;
-  --surface: #171b22;
-  --text: #e8ebf0;
-  --muted: #b3bdca;
-  --border: #2b323d;
-  --accent: #8fb5ff;
-  --accent-text: #0e1116;
-  --danger: #ffb4ab;
-  --demand-below: #56b4e9;
-  --demand-hits: #ffa04d;
-  --demand-hits-text: #ffa04d;
+  /* dark page background */
+  --color-paper: oklch(0.205 0.01 260);
+  /* cards and inputs sit lighter than the page */
+  --color-paper-raised: oklch(0.25 0.01 260);
+  /* wells sit darker than the page */
+  --color-paper-sunken: oklch(0.175 0.01 260);
+  /* primary text, near-white */
+  --color-ink: oklch(0.945 0.01 90);
+  /* secondary text */
+  --color-ink-2: oklch(0.8 0.01 260);
+  /* hairlines */
+  --color-line: oklch(0.31 0.01 260);
+  /* control borders, at least 3:1 on paper-raised */
+  --color-line-strong: oklch(0.55 0.01 260);
+  /* hover on yellow controls is lighter in dark */
+  --color-sign-hover: oklch(0.91 0.14 95);
+  /* yellow edge on a dark page */
+  --color-sign-edge: oklch(0.87 0.17 92);
+  /* board a step darker than the page */
+  --color-board: oklch(0.155 0.01 260);
+  /* visible frame around the board on a dark page */
+  --color-board-edge: oklch(0.34 0.01 260);
+  /* board rules */
+  --color-board-line: oklch(0.31 0.01 260);
+  /* flap cell */
+  --color-flap: oklch(0.245 0.01 260);
+  /* flap cell highlight */
+  --color-flap-hi: oklch(0.275 0.01 260);
+  /* error text, light for a dark page */
+  --color-danger: oklch(0.83 0.085 25);
+  /* warning text */
+  --color-warning: oklch(0.84 0.11 70);
+  /* success text */
+  --color-success: oklch(0.82 0.12 150);
+  /* focus ring turns yellow */
+  --color-focus: oklch(0.87 0.17 92);
+}
+
+/* legacy aliases: start (removed in T21) */
+:root {
+  --bg: var(--color-paper);
+  --surface: var(--color-paper-raised);
+  --text: var(--color-ink);
+  --muted: var(--color-ink-2);
+  --border: var(--color-line);
+  --accent: var(--color-ink);
+  --accent-text: var(--color-paper);
+  --danger: var(--color-danger);
+  --demand-below: var(--color-bar);
+  --demand-hits: var(--color-sign);
+  --demand-hits-text: var(--color-warning);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --accent: var(--color-sign);
+    --accent-text: var(--color-sign-ink);
+  }
+}
+
+:root[data-theme="dark"] {
+  --accent: var(--color-sign);
+  --accent-text: var(--color-sign-ink);
 }
 
 @theme inline {
-  --font-sans: var(--font-sans);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
-  --color-danger: var(--danger);
   --color-demand-below: var(--demand-below);
   --color-demand-hits: var(--demand-hits);
   --color-demand-hits-text: var(--demand-hits-text);
+}
+/* legacy aliases: end */
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
 }
 
 html {
@@ -71,8 +218,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
