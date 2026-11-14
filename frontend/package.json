@@ -14,7 +14,6 @@
     "e2e": "pnpm build && playwright test"
   },
   "dependencies": {
-    "chart.js": "^4.6.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
