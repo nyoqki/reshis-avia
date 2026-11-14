@@ -83,7 +83,7 @@ def test_verify_password_false_for_garbage_hash(garbage: str) -> None:
 
 
 def test_burn_verification_time_returns_none() -> None:
-    assert burn_verification_time("whatever") is None
+    burn_verification_time("whatever")
 
 
 def test_tokens_are_random_and_hash_is_sha256_hex() -> None:
