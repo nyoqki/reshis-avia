@@ -74,7 +74,12 @@ export function ForecastPage({ onSessionExpired }: Props) {
       .routes()
       .then((routes) => {
         if (!alive.current) return;
-        setValue((v) => v ?? initialValue(routes));
+        // A reply without routes must land in the error state, not crash the render.
+        if (!Array.isArray(routes?.routes) || routes.routes.length === 0) {
+          throw new Error("routes response has no routes");
+        }
+        const initial = initialValue(routes);
+        setValue((v) => v ?? initial);
         setState({ status: "ready", routes });
       })
       .catch((e: unknown) => {

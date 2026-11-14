@@ -28,14 +28,21 @@ def seed_demo_user(conn: sqlite3.Connection, settings: Settings) -> None:
             user = get_user_by_username(conn, username)
             if user is None:
                 raise
+    password_ok = verify_password(user.password_hash, password)
     if not user.is_demo:
-        # A regular account already holds this name: converting it would expose its history to
-        # every demo visitor and lock its owner out.
-        logger.error(
-            "Demo user %r not seeded: a regular account with this name exists", user.username
-        )
+        if not password_ok:
+            # A regular account with its own password holds this name: converting it would expose
+            # its history to every demo visitor and lock its owner out.
+            logger.error(
+                "Demo user %r not seeded: a regular account with this name exists", user.username
+            )
+            return
+        # The account already opens with the published demo password, so marking it changes
+        # neither who can sign in nor its password.
+        update_user(conn, user.id, is_demo=True)
+        logger.info("Marked existing user %r as the demo user", user.username)
         return
-    if verify_password(user.password_hash, password):
+    if password_ok:
         return
     update_user(conn, user.id, password_hash=hash_password(password))
     logger.info("Updated demo user %r", username)

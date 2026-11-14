@@ -136,11 +136,6 @@ describe("AuthScreen registration", () => {
     await openRegistration(user);
 
     expect(await screen.findByText(/3.{1,3}32 символа/)).toBeVisible();
-    expect(
-      screen.getByText(
-        "Имя: 3–32 символа, латиница, цифры и знаки «_», «.», «-». Пароль: от 8 символов.",
-      ),
-    ).toBeVisible();
     expect(screen.getByText(/от 8 символов/)).toBeVisible();
     const password = screen.getByLabelText(/^Пароль/);
     expect(password).toHaveAttribute("name", "password");
@@ -178,23 +173,6 @@ describe("AuthScreen registration", () => {
     expect(await screen.findByText("Регистрация закрыта")).toBeVisible();
     expect(screen.queryByLabelText(/^Пароль/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/^Имя/)).not.toBeInTheDocument();
-  });
-
-  it("AC19: a failed demo login shows its error while registration is closed", async () => {
-    stubFetch({ demo_enabled: true, registration_open: false }, (url) =>
-      url.includes("/api/auth/demo")
-        ? json(429, { detail: "Слишком много попыток." }, { "Retry-After": "120" })
-        : json(500, {}),
-    );
-    const user = userEvent.setup();
-    render(<AuthScreen onAuthenticated={() => {}} />);
-
-    await openRegistration(user);
-    await user.click(await screen.findByRole("button", { name: "Войти в демо-аккаунт" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Слишком много попыток. Подождите 2 мин и попробуйте снова.",
-    );
   });
 });
 

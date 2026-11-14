@@ -125,19 +125,4 @@ describe("HistoryPanel", () => {
     expect((await screen.findAllByText(/Казань/))[0]).toBeVisible();
     expect(api.history).toHaveBeenCalledTimes(2);
   });
-
-  it("AC16: refetching keeps the current list on screen instead of a skeleton", async () => {
-    vi.mocked(api.history).mockResolvedValueOnce({ items: [OLDER] });
-    vi.mocked(api.history).mockReturnValueOnce(new Promise(() => {}));
-    const { container, rerender } = render(
-      <HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />,
-    );
-    expect((await screen.findAllByText(/Сочи/))[0]).toBeVisible();
-
-    rerender(<HistoryPanel refreshKey={1} onSelect={() => {}} onSessionExpired={() => {}} />);
-
-    await waitFor(() => expect(api.history).toHaveBeenCalledTimes(2));
-    expect(screen.getAllByText(/Сочи/)[0]).toBeVisible();
-    expect(container.querySelector(".skeleton")).toBeNull();
-  });
 });

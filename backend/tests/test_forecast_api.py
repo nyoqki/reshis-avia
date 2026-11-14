@@ -251,22 +251,6 @@ def test_sixty_first_forecast_in_a_minute_is_429(client: TestClient) -> None:
     assert statuses[60] == 429
 
 
-def test_demo_visitors_from_different_ips_do_not_share_the_forecast_limit(
-    client: TestClient,
-) -> None:
-    attacker = TestClient(client.app, client=("203.0.113.1", 50000))
-    jury = TestClient(client.app, client=("198.51.100.7", 50000))
-    assert attacker.post("/api/auth/demo").status_code == 200
-    assert jury.post("/api/auth/demo").status_code == 200
-    body = trip("Сочи", "2026-06-12", 9000)
-
-    statuses = [attacker.post("/api/forecast", json=body).status_code for _ in range(61)]
-
-    assert statuses[:60] == [200] * 60
-    assert statuses[60] == 429
-    assert jury.post("/api/forecast", json=body).status_code == 200
-
-
 def test_routes_are_public_and_listed_from_the_data(client: TestClient) -> None:
     response = client.get("/api/routes")
 

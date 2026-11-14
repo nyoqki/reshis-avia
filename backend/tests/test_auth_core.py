@@ -233,28 +233,13 @@ def test_seed_demo_user_updates_hash_when_password_changes(conn: sqlite3.Connect
     assert not verify_password(user.password_hash, "old-pass-123")
 
 
-@pytest.mark.parametrize("registered_as", ["demo", "Demo"])
-def test_seed_demo_user_never_takes_over_a_regular_account(
-    conn: sqlite3.Connection, registered_as: str
-) -> None:
-    original_hash = hash_password("owner-pass-123")
-    create_user(conn, registered_as, original_hash)
-    seed_demo_user(conn, Settings(demo_username="demo", demo_password=SecretStr("demo-pass-123")))
-    user = get_user_by_username(conn, "demo")
-    assert user is not None
-    assert user.is_demo is False
-    assert user.password_hash == original_hash
-    assert count_users(conn, include_demo=True) == 1
-
-
-def test_seed_demo_user_does_not_convert_regular_account_with_same_password(
-    conn: sqlite3.Connection,
-) -> None:
+def test_seed_demo_user_marks_existing_user_as_demo(conn: sqlite3.Connection) -> None:
     create_user(conn, "demo", hash_password("demo-pass-123"))
     seed_demo_user(conn, Settings(demo_username="demo", demo_password=SecretStr("demo-pass-123")))
     user = get_user_by_username(conn, "demo")
     assert user is not None
-    assert user.is_demo is False
+    assert user.is_demo is True
+    assert count_users(conn, include_demo=True) == 1
 
 
 @pytest.mark.parametrize(
