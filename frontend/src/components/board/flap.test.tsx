@@ -46,7 +46,7 @@ describe("FlapNumber", () => {
     const { container } = render(<FlapNumber value={1440} />);
     const root = container.firstElementChild as HTMLElement;
     expect(root.textContent).toBe(formatInt(1440));
-    expect(root.textContent).toBe("1 440");
+    expect(root.textContent).toBe("1\u00a0440");
     const list = cells(container);
     expect(list).toHaveLength(4);
     const layer = list[0].closest("[aria-hidden='true']") as HTMLElement;
@@ -75,7 +75,7 @@ describe("FlapNumber", () => {
       act(() => {
         vi.advanceTimersByTime(20);
       });
-      expect(root.textContent).toBe("1 440");
+      expect(root.textContent).toBe("1\u00a0440");
       if (chars(container).join("") !== "1440") sawIntermediate = true;
     }
     expect(sawIntermediate).toBe(true);
