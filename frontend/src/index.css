@@ -1,10 +1,10 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter/index.css";
+@import "./styles/fonts.css";
 
 :root {
   /* native controls follow the OS in «Авто»; a pinned theme overrides this inline */
   color-scheme: light dark;
-  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Golos Text", "Golos Text Fallback", system-ui, sans-serif;
   --bg: #f6f7f9;
   --surface: #ffffff;
   --text: #14181f;
@@ -63,6 +63,10 @@
   --color-demand-below: var(--demand-below);
   --color-demand-hits: var(--demand-hits);
   --color-demand-hits-text: var(--demand-hits-text);
+}
+
+html {
+  font-synthesis: none;
 }
 
 body {

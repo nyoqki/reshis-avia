@@ -1,0 +1,35 @@
+/* Self-hosted subsets built by scripts/fonts/build_fonts.py (SIL OFL 1.1, see assets/fonts/OFL-*.txt). */
+@font-face {
+  font-family: "Golos Text";
+  src: url("../assets/fonts/golos-text-wght.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Metric-adjusted fallbacks (values printed by the build script) keep the layout still while the fonts load. */
+@font-face {
+  font-family: "Golos Text Fallback";
+  src: local("Arial");
+  size-adjust: 111.42%;
+  ascent-override: 87.95%;
+  descent-override: 19.74%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Fallback";
+  src: local("Courier New");
+  size-adjust: 99.98%;
+  ascent-override: 102.02%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
