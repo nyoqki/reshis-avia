@@ -120,7 +120,7 @@ describe("ForecastForm", () => {
     expect(screen.getByLabelText(/^Цена билета/)).toHaveAccessibleDescription(text);
   });
 
-  it("AC10: a price outside the route range turns the hint into a warning next to the field", async () => {
+  it("AC19: a price outside the route range turns the hint into a warning next to the field", async () => {
     // The API accepts such a price (spec: a warning, not an error), so the input is not marked invalid.
     const user = userEvent.setup();
     render(<Harness />);
@@ -130,7 +130,7 @@ describe("ForecastForm", () => {
     const text = /Цена вне диапазона маршрута: 5\s400–18\s000\s₽/;
     const warning = screen.getByText(text);
     expect(warning).toBeVisible();
-    expect(warning).toHaveClass("text-danger");
+    expect(warning).toHaveClass("text-warning");
     expect(price).toHaveAccessibleDescription(text);
     expect(price).not.toHaveAttribute("aria-invalid");
   });
