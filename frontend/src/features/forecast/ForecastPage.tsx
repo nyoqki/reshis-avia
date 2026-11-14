@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { ApiError, api } from "../../api/client";
 import type {
@@ -7,7 +8,7 @@ import type {
   HistoryItem,
   RoutesResponse,
 } from "../../api/types";
-import { displayWants, formatInt } from "../../lib/format";
+import { displayWants, formatInt, formatRub } from "../../lib/format";
 import { HistoryPanel } from "../history/HistoryPanel";
 import { ForecastForm } from "./ForecastForm";
 import { ResultPanel } from "./ResultPanel";
@@ -22,6 +23,10 @@ type RoutesState =
   | { status: "error"; message: string }
   | { status: "ready"; routes: RoutesResponse };
 
+// The API takes whole rubles in this range (backend schemas.py); the form says so before sending.
+const MAX_PRICE = 1_000_000;
+const PRICE_RULE = `Укажите цену в целых рублях: от 1 до ${formatRub(MAX_PRICE)}`;
+
 const SECONDARY =
   "min-h-11 cursor-pointer rounded-lg border border-border px-4 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
@@ -35,6 +40,10 @@ function waitMessage(retryAfter: number | null): string {
 
 function announcement(result: ForecastResponse): string {
   return `Прогноз готов. Желают купить: ${formatInt(displayWants(result.wants))}, купят: ${formatInt(result.buys)}, мест в самолёте: ${formatInt(result.seats)}.`;
+}
+
+function mediaMatches(query: string): boolean {
+  return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
 }
 
 function initialValue(routes: RoutesResponse): ForecastRequest {
@@ -57,6 +66,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const inFlight = useRef(false);
   const formArea = useRef<HTMLDivElement>(null);
+  const resultArea = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
@@ -99,8 +109,30 @@ export function ForecastPage({ onSessionExpired }: Props) {
     loadRoutes();
   }, [loadRoutes]);
 
+  // On a phone the form sits above the result, so a new result lands off-screen and the tap on
+  // «Рассчитать» seems to do nothing: bring the numbers into view. Where the result already starts near
+  // the top (beside the form on a wide screen) nothing moves. refreshKey grows only on success.
+  useEffect(() => {
+    const area = resultArea.current;
+    if (refreshKey === 0 || !area) return;
+    const { top } = area.getBoundingClientRect();
+    if (top >= 0 && top <= window.innerHeight / 3) return;
+    const behavior = mediaMatches("(prefers-reduced-motion: reduce)") ? "auto" : "smooth";
+    area.scrollIntoView?.({ behavior, block: "start" });
+  }, [refreshKey]);
+
   async function submit() {
     if (inFlight.current || !value) return;
+    // An empty field arrives as 0, and the input does not stop fractions: answer here, in words, and
+    // move focus to the field once the message is in the DOM, so a screen reader reads them together.
+    if (!Number.isInteger(value.price) || value.price < 1 || value.price > MAX_PRICE) {
+      flushSync(() => {
+        setFieldErrors({ price: PRICE_RULE });
+        setFormError(null);
+      });
+      formArea.current?.querySelector<HTMLElement>("#forecast-price")?.focus();
+      return;
+    }
     inFlight.current = true;
     setPending(true);
     setFieldErrors({});
@@ -185,7 +217,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
           </div>
         ) : null}
       </div>
-      <div className="grid min-w-0 gap-6">
+      <div ref={resultArea} className="grid min-w-0 scroll-mt-4 gap-6">
         {result ? (
           <ResultPanel
             result={result}

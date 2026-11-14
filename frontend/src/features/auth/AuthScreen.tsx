@@ -125,7 +125,7 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
               aria-selected={mode === m}
               onClick={() => switchMode(m)}
               className={`min-h-10 cursor-pointer rounded-md text-sm font-medium focus-visible:outline-2 focus-visible:outline-accent ${
-                mode === m ? "bg-surface text-text shadow-sm" : "text-muted"
+                mode === m ? "bg-surface text-text shadow-sm ring-1 ring-border" : "text-muted"
               }`}
             >
               {m === "login" ? "Вход" : "Регистрация"}

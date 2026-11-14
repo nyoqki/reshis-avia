@@ -87,7 +87,7 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
                 <th className="py-2 pr-3 text-right font-medium">Цена</th>
                 <th className="py-2 pr-3 text-right font-medium">Желают</th>
                 <th className="py-2 pr-3 text-right font-medium">Купят</th>
-                <th className="py-2 font-medium">Расчёт</th>
+                <th className="py-2 font-medium">Время</th>
               </tr>
             </thead>
             <tbody>

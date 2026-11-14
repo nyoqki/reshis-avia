@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { displayWants, formatDate, formatRub, formatSellout } from "./format";
+import {
+  displayWants,
+  formatDate,
+  formatRub,
+  formatRubRange,
+  formatSellout,
+  formatSigned,
+} from "./format";
 
 const NBSP = " ";
 const NNBSP = " ";
@@ -51,5 +58,19 @@ describe("formatRub", () => {
 describe("formatDate", () => {
   it("AC19: formats an ISO date in Russian", () => {
     expect(formatDate("2026-06-12")).toBe("12 июня 2026");
+  });
+});
+
+describe("formatSigned", () => {
+  it("AC10: a negative calculation gets a real minus sign and NBSP grouping", () => {
+    expect(formatSigned(-3120)).toBe(`−3${NBSP}120`);
+    expect(formatSigned(-708)).toBe("−708");
+    expect(formatSigned(412)).toBe("412");
+  });
+});
+
+describe("formatRubRange", () => {
+  it("joins two prices with an en dash and one ruble sign", () => {
+    expect(formatRubRange(5400, 18000)).toBe(`5${NBSP}400–18${NBSP}000${NBSP}₽`);
   });
 });

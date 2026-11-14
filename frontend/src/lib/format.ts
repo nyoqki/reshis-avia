@@ -19,6 +19,16 @@ export function formatRub(n: number): string {
   return `${formatInt(n)}${NBSP}₽`;
 }
 
+/** A price range with one ruble sign: `5 400–18 000 ₽`. */
+export function formatRubRange(min: number, max: number): string {
+  return `${formatInt(min)}–${formatRub(max)}`;
+}
+
+/** A signed integer with a real minus sign (U+2212): the raw demand under a card that shows 0. */
+export function formatSigned(n: number): string {
+  return formatInt(n).replace("-", "−");
+}
+
 /** ISO date (`2026-06-12`) -> `12 июня 2026`. */
 export function formatDate(iso: string): string {
   const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);

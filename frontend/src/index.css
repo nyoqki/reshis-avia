@@ -13,10 +13,9 @@
   --accent: #1f5fd1;
   --accent-text: #ffffff;
   --danger: #b3261e;
-  /* chart / status tokens, colour-blind safe (blue / orange / purple + distinct dash patterns) */
+  /* chart / status tokens, colour-blind safe (blue / orange + a dashed seats line) */
   --demand-below: #0072b2;
   --demand-hits: #d55e00;
-  --demand-median: #5b3e96;
   /* text-safe variant of --demand-hits: the bar colour is only 3.9:1 on white, small text needs 4.5:1 */
   --demand-hits-text: #a84700;
 }
@@ -30,10 +29,10 @@
     --border: #2b323d;
     --accent: #8fb5ff;
     --accent-text: #0e1116;
-    --danger: #ff8a80;
+    /* light enough for 14 px error text on the surface: APCA Lc -71 (the earlier #ff8a80 was -56) */
+    --danger: #ffb4ab;
     --demand-below: #56b4e9;
     --demand-hits: #ffa04d;
-    --demand-median: #c3a6ff;
     --demand-hits-text: #ffa04d;
   }
 }
@@ -46,10 +45,9 @@
   --border: #2b323d;
   --accent: #8fb5ff;
   --accent-text: #0e1116;
-  --danger: #ff8a80;
+  --danger: #ffb4ab;
   --demand-below: #56b4e9;
   --demand-hits: #ffa04d;
-  --demand-median: #c3a6ff;
   --demand-hits-text: #ffa04d;
 }
 
@@ -64,7 +62,6 @@
   --color-danger: var(--danger);
   --color-demand-below: var(--demand-below);
   --color-demand-hits: var(--demand-hits);
-  --color-demand-median: var(--demand-median);
   --color-demand-hits-text: var(--demand-hits-text);
 }
 

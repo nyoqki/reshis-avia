@@ -86,7 +86,7 @@ describe("ResultPanel", () => {
   it("AC10: negative wants show 0 in the card, the raw value as visible text and the no-demand note", () => {
     render(<ResultPanel result={NO_DEMAND} onUseRecommended={() => {}} />);
     expect(card("Желают купить")).toHaveTextContent(/Желают купить\s*0/);
-    expect(screen.getByText(/расчёт: −3\s120/)).toBeVisible();
+    expect(screen.getByText(/по формуле: −3\s120/)).toBeVisible();
     expect(screen.getByText(/при такой цене билет никто не купит/i)).toBeVisible();
     expect(card("Свободно")).toHaveTextContent("1 440");
   });
@@ -96,10 +96,24 @@ describe("ResultPanel", () => {
     expect(screen.getByText(/вне диапазона маршрута/i)).toBeVisible();
   });
 
+  it("AC10: the out-of-range warning comes before the cards, so a phone shows it first", () => {
+    render(<ResultPanel result={NO_DEMAND} onUseRecommended={() => {}} />);
+    const warning = screen.getByText(/вне диапазона маршрута/i);
+    const firstCard = screen.getByText("Мест в самолёте");
+    expect(
+      warning.compareDocumentPosition(firstCard) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("the result block has a visible heading", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Результат прогноза" })).toBeVisible();
+  });
+
   it("AC10: no out-of-range warning for an in-range price", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     expect(screen.queryByText(/вне диапазона маршрута/i)).toBeNull();
-    expect(screen.queryByText(/расчёт:/)).toBeNull();
+    expect(screen.queryByText(/по формуле:/)).toBeNull();
   });
 
   it("AC11: limit seats explains that sales hit the seat count and shows > 90 %", () => {

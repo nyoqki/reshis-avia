@@ -42,7 +42,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="theme-toggle inline-flex items-center gap-1.5"
+      className="theme-toggle inline-flex min-w-28 items-center justify-center gap-1.5"
       aria-label={`${LABEL[theme]}. Нажмите, чтобы переключить`}
       onClick={() => {
         const next = NEXT[theme];

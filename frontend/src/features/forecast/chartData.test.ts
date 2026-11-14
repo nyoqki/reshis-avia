@@ -103,7 +103,7 @@ describe("buildChartModel", () => {
     expect(model.labels[1]).toMatch(/^20\s?%$/);
   });
 
-  it("AC12: kinds mark below, median and hits against seats", () => {
+  it("AC12: kinds mark below and hits against seats; the median keeps its group's colour", () => {
     const model = buildChartModel(BASE);
     expect(model.seats).toBe(900);
     expect(model.kinds).toEqual([
@@ -117,10 +117,11 @@ describe("buildChartModel", () => {
       "hits",
       "hits",
     ]);
+    // The median is told apart by its outline only: a third colour for it was not in the legend and
+    // switched between purple and orange from one flight to the next.
     const calm = buildChartModel(CONTROL_12000);
-    expect(calm.kinds[4]).toBe("median");
-    expect(calm.kinds.filter((k) => k === "median")).toHaveLength(1);
-    expect(calm.kinds.filter((k) => k === "hits")).toHaveLength(0);
+    expect(calm.kinds[4]).toBe("below");
+    expect(new Set(calm.kinds)).toEqual(new Set(["below"]));
   });
 
   it("AC11: for the OVB response every kind is 'hits' and seats is 270", () => {
@@ -137,5 +138,16 @@ describe("buildChartModel", () => {
     expect(model.rawValues[0]).toBe(-5000);
     expect(model.rawValues[4]).toBe(-3120);
     expect(model.values[4]).toBe(0);
+    // one bar of 150 is enough for the chart to show something
+    expect(model.empty).toBe(false);
+  });
+
+  it("AC10: the model is empty only when every scenario's demand is 0", () => {
+    const none = {
+      ...NEGATIVE,
+      scenarios: NEGATIVE.scenarios.map((s) => ({ ...s, wants: 0, wants_raw: -1, buys: 0 })),
+    };
+    expect(buildChartModel(none).empty).toBe(true);
+    expect(buildChartModel(BASE).empty).toBe(false);
   });
 });

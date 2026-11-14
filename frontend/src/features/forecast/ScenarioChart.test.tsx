@@ -89,5 +89,35 @@ describe("ScenarioChart", () => {
     const medianRow = body[4] as HTMLElement;
     expect(within(medianRow).getByText(/970/)).toBeInTheDocument();
     expect(within(medianRow).getByText(/900/)).toBeInTheDocument();
+    expect(screen.queryByText(/спрос нулевой во всех девяти сценариях/i)).toBeNull();
+  });
+
+  it("AC10/AC12: when demand is 0 in every scenario, a note explains why the chart has no bars", () => {
+    // LED at 20 000 ₽: every scenario's calculation is negative, so all nine bars are 0 and the
+    // empty axes alone would look like a chart that failed to draw.
+    const empty: ForecastResponse = {
+      ...RESULT,
+      price: 20000,
+      wants: 0,
+      wants_raw: -3120,
+      buys: 0,
+      free_seats: 900,
+      limit: "no_demand",
+      scenarios: QUANTILES.map((quantile, i) => ({
+        quantile,
+        wants: 0,
+        wants_raw: -3500 + i * 100,
+        buys: 0,
+        hits_seats: false,
+      })),
+    };
+    render(<ScenarioChart result={empty} />);
+    expect(screen.getByText(/спрос нулевой во всех девяти сценариях/i)).toBeVisible();
+  });
+
+  it("the chart heading matches the other section headings", () => {
+    render(<ScenarioChart result={RESULT} />);
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading).toHaveClass("text-lg");
   });
 });

@@ -14,8 +14,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ForecastResponse } from "../../api/types";
-import { formatInt } from "../../lib/format";
-import { type BarKind, buildChartModel, tickLabel } from "./chartData";
+import { formatInt, formatSigned } from "../../lib/format";
+import { type BarKind, buildChartModel, type ChartModel, tickLabel } from "./chartData";
 
 Chart.register(
   BarController,
@@ -34,7 +34,6 @@ const NBSP = " ";
 interface Palette {
   below: string;
   hits: string;
-  median: string;
   text: string;
   muted: string;
   border: string;
@@ -47,7 +46,6 @@ function readPalette(): Palette {
   return {
     below: get("--demand-below"),
     hits: get("--demand-hits"),
-    median: get("--demand-median"),
     text: get("--text"),
     muted: get("--muted"),
     border: get("--border"),
@@ -79,13 +77,10 @@ function usePalette(): Palette {
 }
 
 function barColor(kind: BarKind, palette: Palette): string {
-  if (kind === "hits") return palette.hits;
-  if (kind === "median") return palette.median;
-  return palette.below;
+  return kind === "hits" ? palette.hits : palette.below;
 }
 
-function summary(result: ForecastResponse): string {
-  const model = buildChartModel(result);
+function summary(model: ChartModel, result: ForecastResponse): string {
   const median = formatInt(model.values[model.medianIndex]);
   const hits = model.kinds.filter((k) => k === "hits").length;
   return `Спрос по девяти сценариям при цене ${formatInt(result.price)}${NBSP}₽. Мест в самолёте: ${formatInt(model.seats)}, медиана спроса: ${median}. Сценариев, где спрос не ниже числа мест: ${hits} из ${model.kinds.length}.`;
@@ -95,7 +90,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const palette = usePalette();
   const model = useMemo(() => buildChartModel(result), [result]);
-  const label = useMemo(() => summary(result), [result]);
+  const label = useMemo(() => summary(model, result), [model, result]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -167,21 +162,32 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
           legend: {
             labels: {
               color: palette.text,
-              // one entry per bar colour (the bar dataset alone would show just the first one) plus the seats line
+              // the default 40 px swatch made the legend wrap to four rows on a phone
+              boxWidth: 14,
+              // one entry per bar colour (the bar dataset alone would show just the first one), the
+              // outline that marks the median, and the seats line; without bars only the line is left
               generateLabels: () =>
                 [
-                  { text: "Ниже числа мест", fillStyle: palette.below, strokeStyle: palette.below },
-                  {
-                    text: "Не ниже числа мест",
-                    fillStyle: palette.hits,
-                    strokeStyle: palette.hits,
-                  },
-                  {
-                    text: "Медиана (обводка)",
-                    fillStyle: "transparent",
-                    strokeStyle: palette.text,
-                    lineWidth: 3,
-                  },
+                  ...(model.empty
+                    ? []
+                    : [
+                        {
+                          text: "Ниже числа мест",
+                          fillStyle: palette.below,
+                          strokeStyle: palette.below,
+                        },
+                        {
+                          text: "Не ниже числа мест",
+                          fillStyle: palette.hits,
+                          strokeStyle: palette.hits,
+                        },
+                        {
+                          text: "Медиана",
+                          fillStyle: "transparent",
+                          strokeStyle: palette.text,
+                          lineWidth: 3,
+                        },
+                      ]),
                   {
                     text: `Мест в самолёте: ${formatInt(model.seats)}`,
                     fillStyle: "transparent",
@@ -203,8 +209,9 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
               label: (item) => {
                 if (item.datasetIndex !== 0) return `Мест: ${formatInt(model.seats)}`;
                 const i = item.dataIndex;
+                const raw = model.rawValues[i];
                 return [
-                  `Желают: ${formatInt(model.values[i])} (сырое: ${formatInt(model.rawValues[i])})`,
+                  `Желают: ${formatInt(model.values[i])}${raw < 0 ? ` (по формуле: ${formatSigned(raw)})` : ""}`,
                   `Купят: ${formatInt(result.scenarios[i].buys)}`,
                 ];
               },
@@ -220,9 +227,16 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
 
   return (
     <section aria-label="Распределение спроса" className="grid gap-3">
-      <h2 className="text-base font-semibold">Распределение спроса по сценариям</h2>
-      <div className="h-72 w-full rounded-xl border border-border bg-surface p-3">
+      <h2 className="text-lg font-semibold">Распределение спроса по сценариям</h2>
+      <div className="relative h-72 w-full rounded-xl border border-border bg-surface p-3">
         <canvas ref={canvasRef} role="img" aria-label={label} />
+        {/* At a price nobody pays all nine bars are 0: without a word the empty axes look broken. */}
+        {model.empty ? (
+          <p className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface px-4 py-3 text-center text-sm">
+            Спрос нулевой во всех девяти сценариях, поэтому столбиков нет. Снизьте цену, чтобы
+            увидеть распределение.
+          </p>
+        ) : null}
       </div>
       <p className="text-sm text-muted">{`Между соседними столбиками — 10${NBSP}% вероятности`}</p>
       <details className="rounded-xl border border-border bg-surface p-3 text-sm" open>

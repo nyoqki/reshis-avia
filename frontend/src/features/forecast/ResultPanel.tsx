@@ -1,5 +1,12 @@
 import type { ForecastResponse } from "../../api/types";
-import { displayWants, formatInt, formatRub, formatSellout } from "../../lib/format";
+import {
+  displayWants,
+  formatInt,
+  formatRub,
+  formatRubRange,
+  formatSellout,
+  formatSigned,
+} from "../../lib/format";
 
 interface Props {
   result: ForecastResponse;
@@ -9,7 +16,7 @@ interface Props {
 const EXPLANATIONS: Record<ForecastResponse["limit"], string> = {
   none: "Спрос ниже числа мест: все желающие купят билет, часть мест останется свободной.",
   no_demand:
-    "При такой цене билет никто не купит: расчёт спроса ушёл ниже нуля, поэтому в карточке показан 0.",
+    "При такой цене билет никто не купит: по формуле спрос ушёл ниже нуля, поэтому в карточке показан 0.",
   seats:
     "Спрос выше числа мест, поэтому продажи упираются в места: самолёт заполнится, а часть желающих не получит билет.",
 };
@@ -34,7 +41,18 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
   const negative = raw < 0;
 
   return (
-    <section aria-label="Результат прогноза" className="grid gap-4">
+    <section aria-labelledby="result-heading" className="grid gap-4">
+      <h2 id="result-heading" className="text-lg font-semibold">
+        Результат прогноза
+      </h2>
+
+      {/* Above the cards: on a phone the cards fill the screen and a warning under them goes unseen. */}
+      {!result.price_in_range ? (
+        <p role="alert" className="rounded-lg border border-danger px-3 py-2 text-sm text-danger">
+          {`Цена вне диапазона маршрута (${formatRubRange(result.price_min, result.price_max)}): прогноз при такой цене менее надёжен.`}
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card label="Мест в самолёте">
           <span className={VALUE}>{formatInt(result.seats)}</span>
@@ -42,7 +60,7 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
         <Card label="Желают купить">
           <span className={VALUE}>{formatInt(displayWants(result.wants))}</span>
           {negative ? (
-            <span className="text-xs text-muted">расчёт: {formatInt(raw).replace("-", "−")}</span>
+            <span className="text-xs text-muted">по формуле: {formatSigned(raw)}</span>
           ) : null}
         </Card>
         <Card label="Купят">
@@ -52,12 +70,6 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
           <span className={VALUE}>{formatInt(result.free_seats)}</span>
         </Card>
       </div>
-
-      {!result.price_in_range ? (
-        <p role="alert" className="rounded-lg border border-danger px-3 py-2 text-sm text-danger">
-          {`Цена вне диапазона маршрута (${formatInt(result.price_min)}–${formatRub(result.price_max)}): прогноз при такой цене менее надёжен.`}
-        </p>
-      ) : null}
 
       <p className="text-sm">{EXPLANATIONS[result.limit]}</p>
       <p className="text-sm font-medium">
@@ -77,7 +89,7 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
           </button>
         </div>
         <p className="text-sm text-muted">
-          {`Коридор: ${formatInt(rec.corridor_low)}–${formatRub(rec.corridor_high)}, ширина ${rec.corridor_pct} % от рекомендованной цены`}
+          {`Коридор: ${formatRubRange(rec.corridor_low, rec.corridor_high)}, ширина ${rec.corridor_pct} % от рекомендованной цены`}
         </p>
         {rec.risky ? (
           <p className="w-fit rounded-full border border-demand-hits px-3 py-0.5 text-sm font-medium text-demand-hits-text">

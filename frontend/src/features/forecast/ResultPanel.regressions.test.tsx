@@ -51,7 +51,7 @@ describe("ResultPanel regressions", () => {
   it("AC10: with the API's clamped wants the raw negative figure is still shown", () => {
     render(<ResultPanel result={NO_DEMAND} onUseRecommended={() => {}} />);
 
-    expect(screen.getByText(/расчёт:\s*−3\s120/)).toBeVisible();
+    expect(screen.getByText(/по формуле:\s*−3\s120/)).toBeVisible();
   });
 
   it("AC14: corridor_pct is labelled as the full corridor width, not a ± deviation", () => {

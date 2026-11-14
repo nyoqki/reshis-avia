@@ -69,6 +69,13 @@ describe("HistoryPanel", () => {
     expect(t).not.toContain("−3");
   });
 
+  it("AC16: the column with the calculation time is labelled «Время»", async () => {
+    vi.mocked(api.history).mockResolvedValue({ items: [NEWER, OLDER] });
+    render(<HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />);
+    expect(await screen.findByRole("columnheader", { name: "Время" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Расчёт" })).toBeNull();
+  });
+
   it("AC16: empty items show the Russian empty-state text", async () => {
     vi.mocked(api.history).mockResolvedValue({ items: [] });
     render(<HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />);
