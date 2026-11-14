@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    image: rehis-dev:latest
+    ports:
+      - "127.0.0.1:8030:8000"
+    # Supplies REHIS_ALLOWED_HOSTS, REHIS_ALLOWED_ORIGINS and the demo credentials.
+    env_file: ${REHIS_ENV_FILE:-.env}
+    environment:
+      # The whole pinned subnet, so the reverse proxy peer is trusted whichever
+      # address in it Docker presents.
+      REHIS_TRUSTED_PROXIES: 172.30.80.0/24
+      # REHIS_FORECAST_PATH: /app/data/my_forecast.csv
+    volumes:
+      - rehis-db:/data
+      # - ./data/my_forecast.csv:/app/data/my_forecast.csv:ro
+    networks:
+      - rehis
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  rehis-db:
+
+networks:
+  rehis:
+    ipam:
+      config:
+        - subnet: 172.30.80.0/24
