@@ -18,6 +18,10 @@ services:
     networks:
       - rehis
     restart: unless-stopped
+    # The VPS is shared with other services: a burst of requests must not starve them.
+    mem_limit: 768m
+    cpus: 2
+    pids_limit: 256
     read_only: true
     tmpfs:
       - /tmp
