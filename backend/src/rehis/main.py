@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 
+from rehis.api import forecast as forecast_api
 from rehis.api import health
 from rehis.auth import router as auth
 from rehis.auth.demo import seed_demo_user
@@ -35,4 +36,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_docs(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
+    app.include_router(forecast_api.router, prefix="/api")
     return app
