@@ -30,7 +30,7 @@ export function AppHeader({ user, onLoggedOut }: Props) {
   return (
     <header className="app-header">
       <div className="app-header__inner">
-        <span className="app-header__brand">Решись Авиа</span>
+        <h1 className="app-header__brand">Решись Авиа</h1>
         <div className="app-header__actions">
           <span className="app-header__user">{user.username}</span>
           {user.is_demo ? <span className="app-header__badge">демо</span> : null}

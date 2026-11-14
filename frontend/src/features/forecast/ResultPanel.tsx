@@ -78,7 +78,7 @@ export function ResultPanel({ result, onUseRecommended }: Props) {
           {`Коридор: ${formatInt(rec.corridor_low)}–${formatRub(rec.corridor_high)} (±${rec.corridor_pct} %)`}
         </p>
         {rec.risky ? (
-          <p className="w-fit rounded-full border border-demand-hits px-3 py-0.5 text-sm font-medium text-demand-hits">
+          <p className="w-fit rounded-full border border-demand-hits px-3 py-0.5 text-sm font-medium text-demand-hits-text">
             Рискованный рейс: прогноз цены неуверенный
           </p>
         ) : null}

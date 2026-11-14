@@ -144,7 +144,13 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
         animation: false,
         scales: {
           x: {
-            ticks: { color: palette.muted, maxRotation: 0, autoSkip: false },
+            ticks: {
+              color: palette.muted,
+              maxRotation: 0,
+              autoSkip: false,
+              // the nine long labels collide on a phone; the table below carries the full names
+              callback: (_value, index) => `${model.labels[index].split(/\s/)[0]}${NBSP}%`,
+            },
             grid: { display: false },
             border: { color: palette.border },
           },
@@ -156,7 +162,35 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
           },
         },
         plugins: {
-          legend: { labels: { color: palette.text } },
+          legend: {
+            labels: {
+              color: palette.text,
+              // one entry per bar colour (the bar dataset alone would show just the first one) plus the seats line
+              generateLabels: () =>
+                [
+                  { text: "Ниже числа мест", fillStyle: palette.below, strokeStyle: palette.below },
+                  {
+                    text: "Не ниже числа мест",
+                    fillStyle: palette.hits,
+                    strokeStyle: palette.hits,
+                  },
+                  {
+                    text: "Медиана (обводка)",
+                    fillStyle: "transparent",
+                    strokeStyle: palette.text,
+                    lineWidth: 3,
+                  },
+                  {
+                    text: `Мест в самолёте: ${formatInt(model.seats)}`,
+                    fillStyle: "transparent",
+                    strokeStyle: palette.text,
+                    lineWidth: 2,
+                    lineDash: [6, 4],
+                  },
+                ].map((item) => ({ ...item, fontColor: palette.text })),
+            },
+            onClick: () => undefined,
+          },
           tooltip: {
             backgroundColor: palette.surface,
             titleColor: palette.text,
@@ -190,7 +224,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
       </div>
       <p className="text-sm text-muted">{`Между соседними столбиками — 10${NBSP}% вероятности`}</p>
       <details className="rounded-xl border border-border bg-surface p-3 text-sm" open>
-        <summary className="cursor-pointer font-medium">Таблица сценариев</summary>
+        <summary className="cursor-pointer py-2 font-medium">Таблица сценариев</summary>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full border-collapse text-left tabular-nums">
             <thead>

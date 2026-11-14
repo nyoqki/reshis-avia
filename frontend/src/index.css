@@ -15,6 +15,8 @@
   --demand-below: #0072b2;
   --demand-hits: #d55e00;
   --demand-median: #5b3e96;
+  /* text-safe variant of --demand-hits: the bar colour is only 3.9:1 on white, small text needs 4.5:1 */
+  --demand-hits-text: #a84700;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,14 +24,15 @@
     --bg: #0e1116;
     --surface: #171b22;
     --text: #e8ebf0;
-    --muted: #9aa5b4;
+    --muted: #b3bdca;
     --border: #2b323d;
-    --accent: #6ea0ff;
+    --accent: #8fb5ff;
     --accent-text: #0e1116;
     --danger: #ff8a80;
     --demand-below: #56b4e9;
     --demand-hits: #ffa04d;
     --demand-median: #c3a6ff;
+    --demand-hits-text: #ffa04d;
   }
 }
 
@@ -37,14 +40,15 @@
   --bg: #0e1116;
   --surface: #171b22;
   --text: #e8ebf0;
-  --muted: #9aa5b4;
+  --muted: #b3bdca;
   --border: #2b323d;
-  --accent: #6ea0ff;
+  --accent: #8fb5ff;
   --accent-text: #0e1116;
   --danger: #ff8a80;
   --demand-below: #56b4e9;
   --demand-hits: #ffa04d;
   --demand-median: #c3a6ff;
+  --demand-hits-text: #ffa04d;
 }
 
 @theme inline {
@@ -59,6 +63,7 @@
   --color-demand-below: var(--demand-below);
   --color-demand-hits: var(--demand-hits);
   --color-demand-median: var(--demand-median);
+  --color-demand-hits-text: var(--demand-hits-text);
 }
 
 body {
@@ -92,6 +97,9 @@ body {
 }
 
 .app-header__brand {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
   font-weight: 650;
   letter-spacing: -0.01em;
 }
@@ -112,7 +120,7 @@ body {
 }
 
 .theme-toggle {
-  min-height: 2.25rem;
+  min-height: 2.75rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   background: transparent;
