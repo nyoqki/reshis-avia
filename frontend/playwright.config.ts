@@ -24,6 +24,8 @@ export default defineConfig({
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"], colorScheme: "light" },
+      // Tests tagged @mobile check the 360 px layout and belong to the mobile project only.
+      grepInvert: /@mobile/,
     },
     {
       name: "mobile",
