@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "../../api/client";
-import type { ForecastResponse, RoutesResponse } from "../../api/types";
+import type { ForecastResponse, HistoryItem, RoutesResponse } from "../../api/types";
 import { ForecastPage } from "./ForecastPage";
 
 vi.mock("../../api/client", async (importOriginal) => {
@@ -28,6 +28,14 @@ const ROUTES: RoutesResponse = {
       base_price: 9000,
       price_min: 5400,
       price_max: 18000,
+    },
+    {
+      code: "MOW-KZN",
+      origin: "Москва",
+      destination: "Казань",
+      base_price: 7000,
+      price_min: 4200,
+      price_max: 14000,
     },
   ],
 };
@@ -173,5 +181,45 @@ describe("ForecastPage submit", () => {
     render(<ForecastPage onSessionExpired={onExpired} />);
     await submit(user);
     await waitFor(() => expect(onExpired).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe("ForecastPage history", () => {
+  it("AC16: clicking a history entry sets the destination, date and price inputs to that entry's values", async () => {
+    const item: HistoryItem = {
+      id: 5,
+      route: "MOW-KZN",
+      origin: "Москва",
+      destination: "Казань",
+      date: "2026-06-20",
+      price: 8300,
+      seats: 900,
+      wants: 700,
+      buys: 650,
+      created_at: "2026-05-02T10:30:00Z",
+    };
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.history).mockResolvedValue({ items: [item] });
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+
+    const entries = await screen.findAllByRole("button", { name: /Казань/ });
+    await user.click(entries[0]);
+
+    expect(screen.getByLabelText("Куда")).toHaveValue("Казань");
+    expect(screen.getByLabelText("Дата вылета")).toHaveValue("2026-06-20");
+    expect(screen.getByLabelText("Цена билета, ₽")).toHaveValue(8300);
+  });
+
+  it("AC16: a successful forecast refetches the history", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.forecast).mockResolvedValue(RESPONSE);
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await waitFor(() => expect(api.history).toHaveBeenCalledTimes(1));
+
+    await user.click(await screen.findByRole("button", { name: "Рассчитать" }));
+
+    await waitFor(() => expect(api.history).toHaveBeenCalledTimes(2));
   });
 });
