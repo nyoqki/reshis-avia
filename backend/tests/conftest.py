@@ -5,8 +5,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from rehis.config import Settings
 
+from rehis.config import Settings
 from rehis.main import create_app
 
 

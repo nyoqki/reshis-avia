@@ -40,5 +40,10 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106"]
 
+# Test files import rehis modules before the task that adds them exists; without this,
+# ruff classifies a not-yet-existing rehis submodule as third-party and the sort flips later.
+[tool.ruff.lint.isort]
+known-first-party = ["rehis"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

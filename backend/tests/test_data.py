@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
 from rehis.config import Settings
 from rehis.domain.data import (
     FORECAST_COLUMNS,
@@ -13,7 +14,6 @@ from rehis.domain.data import (
     ForecastSchemaError,
     load_forecast_data,
 )
-
 from rehis.main import create_app
 
 REPO = Path(__file__).resolve().parents[2]

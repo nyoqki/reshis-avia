@@ -3,6 +3,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from rehis.domain.data import (
+    QUANTILES,
+    FlightForecast,
+    ForecastData,
+    RouteInfo,
+    load_forecast_data,
+)
 from rehis.domain.engine import (
     RISKY_CORRIDOR_PCT,
     ForecastResult,
@@ -11,14 +19,6 @@ from rehis.domain.engine import (
     demand_at_price,
     round_people,
     sellout_band,
-)
-
-from rehis.domain.data import (
-    QUANTILES,
-    FlightForecast,
-    ForecastData,
-    RouteInfo,
-    load_forecast_data,
 )
 
 REPO = Path(__file__).resolve().parents[2]
