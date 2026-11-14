@@ -363,3 +363,12 @@ def test_health_reports_forecast_rows(client: TestClient) -> None:
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "forecast_rows": 155}
+
+
+def test_team_forecast_shipped_for_production_loads_and_covers_the_stub_flights() -> None:
+    # compose.prod.yaml serves data/my_forecast.csv, the team's own forecast from the ML block
+    # (case PDF, p. 12): it must pass the startup validation and cover the stub's flights exactly.
+    team = load_forecast_data(ROUTES, REPO / "data" / "my_forecast.csv")
+    stub = load_forecast_data(ROUTES, FORECAST)
+    assert set(team.flights) == set(stub.flights)
+    assert (team.date_min, team.date_max) == (stub.date_min, stub.date_max)

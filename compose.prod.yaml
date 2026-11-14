@@ -10,10 +10,11 @@ services:
       # The whole pinned subnet, so the reverse proxy peer is trusted whichever
       # address in it Docker presents.
       REHIS_TRUSTED_PROXIES: 172.30.80.0/24
-      # REHIS_FORECAST_PATH: /app/data/my_forecast.csv
+      # The team's own forecast from the ML block (case PDF, p. 12), shipped in the image;
+      # the image default stays the organizers' stub, which the tests and the smoke check use.
+      REHIS_FORECAST_PATH: /app/data/my_forecast.csv
     volumes:
       - rehis-db:/data
-      # - ./data/my_forecast.csv:/app/data/my_forecast.csv:ro
     networks:
       - rehis
     restart: unless-stopped
