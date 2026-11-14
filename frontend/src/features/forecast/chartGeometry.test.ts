@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-
-import { buildChartModel, type BarKind, type ChartModel } from "./chartData";
-import { layoutChart, niceTicks, type ChartBox } from "./chartGeometry";
 import type { ForecastResponse } from "../../api/types";
+import { type BarKind, buildChartModel, type ChartModel } from "./chartData";
+import { type ChartBox, layoutChart, niceTicks } from "./chartGeometry";
 
 const BOX: ChartBox = { width: 600, height: 300, top: 20, right: 10, bottom: 40, left: 50 };
 
@@ -42,7 +41,9 @@ describe("niceTicks", () => {
       expect(ticks[ticks.length - 1].value).toBeGreaterThanOrEqual(max);
       expect(ticks.length).toBeLessThanOrEqual(6);
       const step = ticks[1].value - ticks[0].value;
-      ticks.forEach((t, i) => expect(t.value).toBeCloseTo(i * step));
+      for (const [i, t] of ticks.entries()) {
+        expect(t.value).toBeCloseTo(i * step);
+      }
     }
     expect(niceTicks(998, 2).length).toBeLessThanOrEqual(3);
   });
@@ -101,7 +102,17 @@ describe("layoutChart", () => {
 
   it("AC12: the median flag is set on index 4 only; nine bars have equal widths and stay inside the plot", () => {
     const g = layoutChart(model(VALUES, 450), BOX);
-    expect(g.bars.map((b) => b.median)).toEqual([false, false, false, false, true, false, false, false, false]);
+    expect(g.bars.map((b) => b.median)).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+    ]);
     expect(g.bars.map((b) => b.index)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
     const w = g.bars[0].width;
     expect(w).toBeGreaterThan(0);
