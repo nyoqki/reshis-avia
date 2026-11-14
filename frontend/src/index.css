@@ -142,3 +142,29 @@ body {
     animation: none;
   }
 }
+
+.app-header__badge {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.0625rem 0.5rem;
+}
+
+.app-header__note {
+  margin: 0 auto;
+  max-width: 64rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  padding: 0 1rem 0.75rem;
+}
+
+.app-header__note--error {
+  color: var(--danger);
+}
+
+.theme-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { AppHeader } from "./components/AppHeader";
+import { AuthScreen } from "./features/auth/AuthScreen";
 import { useSession } from "./hooks/useSession";
 import { applyTheme, getStoredTheme } from "./lib/theme";
 
@@ -22,15 +23,14 @@ export default function App() {
   if (session.status === "anonymous" || !session.user) {
     return (
       <main className="shell">
-        {/* AuthScreen slot (T11) */}
-        <div data-slot="auth" />
+        <AuthScreen onAuthenticated={session.setUser} sessionExpired={session.sessionExpired} />
       </main>
     );
   }
 
   return (
     <>
-      <AppHeader user={session.user} />
+      <AppHeader user={session.user} onLoggedOut={() => session.setUser(null)} />
       <main className="shell">
         {/* ForecastPage slot (T12) */}
         <div data-slot="forecast" />
