@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plane still</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      canvas {
+        display: block;
+        width: 1200px;
+        height: 900px;
+      }
+    </style>
+  </head>
+  <body data-state="loading">
+    <canvas id="plane" width="1200" height="900"></canvas>
+    <script type="module">
+      import { mountPlaneScene } from "/src/features/auth/plane/scene.ts";
+
+      const canvas = document.getElementById("plane");
+      try {
+        const handle = mountPlaneScene(canvas, {
+          still: true,
+          preserveDrawingBuffer: true,
+          maxDpr: 1,
+          onFirstFrame: () => {
+            document.body.dataset.state = "ready";
+          },
+        });
+        handle.resize(1200, 900);
+        handle.start();
+      } catch (error) {
+        document.body.dataset.error = String(error);
+        document.body.dataset.state = "error";
+      }
+    </script>
+  </body>
+</html>
