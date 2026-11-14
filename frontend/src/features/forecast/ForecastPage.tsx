@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, api } from "../../api/client";
-import type { ForecastRequest, ForecastResponse, RoutesResponse } from "../../api/types";
+import type {
+  ForecastRequest,
+  ForecastResponse,
+  HistoryItem,
+  RoutesResponse,
+} from "../../api/types";
+import { HistoryPanel } from "../history/HistoryPanel";
 import { ForecastForm } from "./ForecastForm";
 import { ResultPanel } from "./ResultPanel";
 import { ScenarioChart } from "./ScenarioChart";
@@ -43,6 +49,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
   const [pending, setPending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const inFlight = useRef(false);
   const alive = useRef(true);
   const expired = useRef(onSessionExpired);
@@ -89,7 +96,10 @@ export function ForecastPage({ onSessionExpired }: Props) {
     setFormError(null);
     try {
       const response = await api.forecast(value);
-      if (alive.current) setResult(response);
+      if (alive.current) {
+        setResult(response);
+        setRefreshKey((k) => k + 1);
+      }
     } catch (e) {
       if (!alive.current) return;
       if (e instanceof ApiError && e.status === 401) {
@@ -106,6 +116,17 @@ export function ForecastPage({ onSessionExpired }: Props) {
       inFlight.current = false;
       if (alive.current) setPending(false);
     }
+  }
+
+  function selectHistory(item: HistoryItem) {
+    setValue({
+      origin: item.origin,
+      destination: item.destination,
+      date: item.date,
+      price: item.price,
+    });
+    setFieldErrors({});
+    setFormError(null);
   }
 
   if (state.status === "loading") {
@@ -156,7 +177,11 @@ export function ForecastPage({ onSessionExpired }: Props) {
           />
         ) : null}
         {result ? <ScenarioChart result={result} /> : null}
-        <div data-slot="history" />
+        <HistoryPanel
+          refreshKey={refreshKey}
+          onSelect={selectHistory}
+          onSessionExpired={onSessionExpired}
+        />
       </div>
     </div>
   );
