@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import hashlib
 import io
-import tempfile
 import sys
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -64,7 +64,9 @@ FALLBACKS = {
 
 def fetch(name: str) -> Path:
     url, digest = SOURCES[name]
-    with urllib.request.urlopen(url, timeout=60) as r:  # noqa: S310 - pinned https URL
+    if not url.startswith("https://"):
+        sys.exit(f"refusing non-https source: {url}")
+    with urllib.request.build_opener().open(url, timeout=60) as r:
         data = r.read()
     got = hashlib.sha256(data).hexdigest()
     if got != digest:
