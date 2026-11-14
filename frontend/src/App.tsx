@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { AppHeader } from "./components/AppHeader";
+import { Skeleton } from "./components/ui/Skeleton";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { ForecastPage } from "./features/forecast/ForecastPage";
 import { useSession } from "./hooks/useSession";
@@ -16,7 +17,7 @@ export default function App() {
   if (session.status === "loading") {
     return (
       <main className="shell" aria-busy="true">
-        <div className="skeleton" />
+        <Skeleton />
       </main>
     );
   }

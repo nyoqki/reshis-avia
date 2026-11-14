@@ -2,13 +2,7 @@ import { useState } from "react";
 
 import { applyTheme, getStoredTheme, type Theme } from "../lib/theme";
 
-const NEXT: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
-const LABEL: Record<Theme, string> = {
-  system: "Тема: как в системе",
-  light: "Тема: светлая",
-  dark: "Тема: тёмная",
-};
-const SHORT: Record<Theme, string> = { system: "Авто", light: "Светлая", dark: "Тёмная" };
+import { SegmentedControl, type SegmentedOption } from "./ui/SegmentedControl";
 
 // The word alone («Авто») does not say what it switches; the icon does: half disc, sun, moon.
 function ThemeIcon({ theme }: { theme: Theme }) {
@@ -36,22 +30,26 @@ function ThemeIcon({ theme }: { theme: Theme }) {
   );
 }
 
-export function ThemeToggle() {
+const OPTIONS: SegmentedOption<Theme>[] = [
+  { value: "system", label: "Авто", icon: <ThemeIcon theme="system" /> },
+  { value: "light", label: "Светлая", icon: <ThemeIcon theme="light" /> },
+  { value: "dark", label: "Тёмная", icon: <ThemeIcon theme="dark" /> },
+];
+
+export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
 
   return (
-    <button
-      type="button"
-      className="theme-toggle inline-flex min-w-28 items-center justify-center gap-1.5"
-      aria-label={`${LABEL[theme]}. Нажмите, чтобы переключить`}
-      onClick={() => {
-        const next = NEXT[theme];
+    <SegmentedControl
+      name="theme"
+      legend="Тема"
+      value={theme}
+      options={OPTIONS}
+      compact={compact}
+      onChange={(next) => {
         applyTheme(next);
         setTheme(next);
       }}
-    >
-      <ThemeIcon theme={theme} />
-      {SHORT[theme]}
-    </button>
+    />
   );
 }
