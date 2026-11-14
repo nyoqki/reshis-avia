@@ -2,6 +2,10 @@
 # Container smoke test for the production image (AC20, with AC9/AC2 inside the container).
 set -euo pipefail
 
+# Requests go to a local container: keep a developer's HTTP(S)_PROXY from intercepting them.
+export NO_PROXY="127.0.0.1,localhost${NO_PROXY:+,$NO_PROXY}"
+export no_proxy="127.0.0.1,localhost${no_proxy:+,$no_proxy}"
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
@@ -62,8 +66,8 @@ run_container() {
 }
 
 wait_healthy() {
-  local status="" i
-  for i in $(seq 1 60); do
+  local status=""
+  for _ in $(seq 1 60); do
     status="$(docker inspect -f '{{.State.Health.Status}}' "$NAME" 2>/dev/null || true)"
     [ "$status" = "healthy" ] && return 0
     sleep 2
