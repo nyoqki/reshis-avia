@@ -116,7 +116,7 @@ describe("ScenarioChart", () => {
   it("AC12: focusing the first bar button shows the demand readout; ArrowRight moves to the next bar and End to the last", async () => {
     const user = userEvent.setup();
     render(<ScenarioChart result={RESULT} />);
-    const buttons = screen.getAllByRole("button");
+    const buttons = screen.getAllByRole("button", { name: /желают/ });
     expect(buttons).toHaveLength(9);
     expect(buttons[0]).toHaveAccessibleName(/желают 610, купят 610/);
 
@@ -139,14 +139,14 @@ describe("ScenarioChart", () => {
 
   it("AC12: the bar buttons form a single tab stop", () => {
     render(<ScenarioChart result={RESULT} />);
-    const stops = screen.getAllByRole("button").filter((b) => b.tabIndex === 0);
+    const stops = screen.getAllByRole("button", { name: /желают/ }).filter((b) => b.tabIndex === 0);
     expect(stops).toHaveLength(1);
   });
 
   it("AC12/AC10: for an all-negative scenario the readout shows the raw formula value and the empty overlay is visible", () => {
     render(<ScenarioChart result={EMPTY} />);
     expect(screen.getByText(/спрос нулевой во всех девяти сценариях/i)).toBeVisible();
-    screen.getAllByRole("button")[0].focus();
+    screen.getAllByRole("button", { name: /желают/ })[0].focus();
     expect(screen.getByText(/Желают:\s*0\s*\(по формуле:\s*−3\s500\)/)).toBeVisible();
     expect(screen.getByText(/Купят:\s*0/)).toBeVisible();
   });
@@ -182,7 +182,7 @@ describe("ScenarioChart", () => {
     for (const bar of all) {
       expect(Number(bar.getAttribute("height"))).toBeGreaterThan(0);
     }
-    screen.getAllByRole("button")[0].focus();
+    screen.getAllByRole("button", { name: /желают/ })[0].focus();
     const readout = screen.getByText(/Желают:\s*610/);
     expect(readout.closest("[role=status], [aria-live]")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
