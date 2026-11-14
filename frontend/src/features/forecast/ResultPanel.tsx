@@ -15,9 +15,11 @@ const EXPLANATIONS: Record<ForecastResponse["limit"], string> = {
 };
 
 function Card({ label, children }: { label: string; children: React.ReactNode }) {
+  // Each card spans three rows of the parent grid as a subgrid (label, number, optional note): the labels
+  // share one row, so the numbers line up even when a label wraps («Мест в самолёте» on a narrow card).
   return (
-    <div className="grid content-start gap-1 rounded-xl border border-border bg-surface p-4">
-      <span className="text-sm text-muted">{label}</span>
+    <div className="row-span-3 grid grid-rows-subgrid gap-0 rounded-xl border border-border bg-surface p-4">
+      <span className="pb-1 text-sm text-muted">{label}</span>
       {children}
     </div>
   );
