@@ -2,6 +2,14 @@ import { type FormEvent, useEffect, useState } from "react";
 
 import { ApiError, api } from "../../api/client";
 import type { AuthOptions, UserOut } from "../../api/types";
+import { Logo } from "../../components/brand/Logo";
+import { Button } from "../../components/ui/Button";
+import { Field } from "../../components/ui/Field";
+import { Input } from "../../components/ui/inputs";
+import { Notice } from "../../components/ui/Notice";
+import { Tabs } from "../../components/ui/Tabs";
+import { DeparturesBoard } from "./DeparturesBoard";
+import { PlaneHero } from "./plane/PlaneHero";
 
 interface Props {
   onAuthenticated: (user: UserOut) => void;
@@ -18,10 +26,10 @@ interface FormErrors {
 
 const DEFAULT_OPTIONS: AuthOptions = { demo_enabled: false, registration_open: true };
 
-const INPUT =
-  "min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-base text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
-const PRIMARY =
-  "min-h-11 w-full cursor-pointer rounded-lg bg-accent px-4 text-base font-semibold text-(--accent-text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60";
+const MODE_TABS: { id: Mode; label: string }[] = [
+  { id: "login", label: "Вход" },
+  { id: "register", label: "Регистрация" },
+];
 
 function describeError(error: unknown, mode: Mode): FormErrors {
   if (!(error instanceof ApiError)) {
@@ -98,134 +106,109 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
   const registrationClosed = !isLogin && !options.registration_open;
   const busy = pending !== null;
   // Shared by the form and the closed-registration notice: a demo-login error must show in both.
-  const formAlert = errors.form ? (
-    <p role="alert" className="text-sm text-danger">
-      {errors.form}
-    </p>
-  ) : null;
+  const formAlert = errors.form ? <Notice tone="error">{errors.form}</Notice> : null;
 
   return (
-    <div className="mx-auto w-full max-w-md py-8">
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight">Решись Авиа</h1>
-      <p className="mb-6 text-muted">Прогноз спроса на авиабилеты по вашим маршрутам.</p>
-
-      {sessionExpired ? (
-        <p role="status" className="mb-4 rounded-lg border border-border bg-surface px-3 py-2">
-          Сессия истекла, войдите снова
-        </p>
-      ) : null}
-
-      <div className="rounded-xl border border-border bg-surface p-5">
-        <div role="tablist" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-bg p-1">
-          {(["login", "register"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={mode === m}
-              onClick={() => switchMode(m)}
-              className={`min-h-10 cursor-pointer rounded-md text-sm font-medium focus-visible:outline-2 focus-visible:outline-accent ${
-                mode === m ? "bg-surface text-text shadow-sm ring-1 ring-border" : "text-muted"
-              }`}
-            >
-              {m === "login" ? "Вход" : "Регистрация"}
-            </button>
-          ))}
+    <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
+      <div className="flex min-w-0 flex-col gap-6 lg:order-2 lg:col-span-2">
+        <div className="flex flex-col gap-3">
+          <h1 className="m-0">
+            <Logo size="hero" />
+          </h1>
+          <p className="text-base text-ink-2">Прогноз спроса на авиабилеты по вашим маршрутам.</p>
         </div>
 
-        {registrationClosed ? (
-          <div className="grid gap-2">
-            <p role="status" className="py-4 text-center text-muted">
-              Регистрация закрыта
+        {sessionExpired ? (
+          <Notice tone="info" role="status">
+            Сессия истекла, войдите снова
+          </Notice>
+        ) : null}
+
+        <div className="rounded-board border border-line bg-paper-raised p-4">
+          <Tabs idPrefix="auth" tabs={MODE_TABS} value={mode} onChange={switchMode}>
+            {registrationClosed ? (
+              <div className="flex flex-col gap-3 pt-6">
+                <p role="status" className="py-4 text-center text-ink-2">
+                  Регистрация закрыта
+                </p>
+                {formAlert}
+              </div>
+            ) : (
+              <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4 pt-6">
+                {!isLogin ? (
+                  <p className="text-sm text-ink-2">
+                    Имя: 3–32 символа, латиница, цифры и знаки «_», «.», «-». Пароль: от 8 символов.
+                  </p>
+                ) : null}
+
+                <Field id="auth-username" label="Имя пользователя" error={errors.username}>
+                  {(control) => (
+                    <Input
+                      {...control}
+                      name="username"
+                      type="text"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      required
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                  )}
+                </Field>
+
+                <Field id="auth-password" label="Пароль" error={errors.password}>
+                  {(control) => (
+                    <Input
+                      {...control}
+                      name="password"
+                      type="password"
+                      autoComplete={isLogin ? "current-password" : "new-password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  )}
+                </Field>
+
+                {formAlert}
+
+                <Button
+                  variant="primary"
+                  type="submit"
+                  block
+                  disabled={busy}
+                  loading={pending === "form"}
+                  loadingLabel={isLogin ? "Входим…" : "Создаём аккаунт…"}
+                >
+                  {isLogin ? "Войти" : "Создать аккаунт"}
+                </Button>
+              </form>
+            )}
+          </Tabs>
+        </div>
+
+        {options.demo_enabled ? (
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="secondary"
+              block
+              disabled={busy}
+              onClick={() => void run("demo", api.demo)}
+            >
+              Войти в демо-аккаунт
+            </Button>
+            <p className="text-sm text-ink-2">
+              Аккаунт общий: расчёты и история видны всем, кто в него входит.
             </p>
-            {formAlert}
           </div>
-        ) : (
-          <form onSubmit={onSubmit} noValidate className="grid gap-4">
-            {!isLogin ? (
-              <p className="text-sm text-muted">
-                Имя: 3–32 символа, латиница, цифры и знаки «_», «.», «-». Пароль: от 8 символов.
-              </p>
-            ) : null}
-
-            <div className="grid gap-1.5">
-              <label htmlFor="auth-username" className="text-sm font-medium">
-                Имя пользователя
-              </label>
-              <input
-                id="auth-username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                autoCapitalize="none"
-                spellCheck={false}
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                aria-invalid={errors.username ? true : undefined}
-                aria-describedby={errors.username ? "auth-username-error" : undefined}
-                className={INPUT}
-              />
-              {errors.username ? (
-                <p id="auth-username-error" className="text-sm text-danger">
-                  {errors.username}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="grid gap-1.5">
-              <label htmlFor="auth-password" className="text-sm font-medium">
-                Пароль
-              </label>
-              <input
-                id="auth-password"
-                name="password"
-                type="password"
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                aria-invalid={errors.password ? true : undefined}
-                aria-describedby={errors.password ? "auth-password-error" : undefined}
-                className={INPUT}
-              />
-              {errors.password ? (
-                <p id="auth-password-error" className="text-sm text-danger">
-                  {errors.password}
-                </p>
-              ) : null}
-            </div>
-
-            {formAlert}
-
-            <button type="submit" disabled={busy} className={PRIMARY}>
-              {pending === "form"
-                ? isLogin
-                  ? "Входим…"
-                  : "Создаём аккаунт…"
-                : isLogin
-                  ? "Войти"
-                  : "Создать аккаунт"}
-            </button>
-          </form>
-        )}
+        ) : null}
       </div>
 
-      {options.demo_enabled ? (
-        <div className="mt-6 grid gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void run("demo", api.demo)}
-            className="min-h-11 w-full cursor-pointer rounded-lg border border-accent bg-transparent px-4 text-base font-semibold text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Войти в демо-аккаунт
-          </button>
-          <p className="text-sm text-muted">
-            Аккаунт общий: расчёты и история видны всем, кто в него входит.
-          </p>
-        </div>
-      ) : null}
+      <div className="flex min-w-0 flex-col gap-6 lg:order-1 lg:col-span-3">
+        <PlaneHero />
+        <DeparturesBoard />
+      </div>
     </div>
   );
 }
