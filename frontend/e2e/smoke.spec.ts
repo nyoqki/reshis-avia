@@ -77,7 +77,9 @@ test("AC21/AC16: the history shows this calculation's price at the top", async (
   await demoLogin(page);
   await calculate(page);
   const history = page.getByRole("region", { name: "История расчётов" });
-  const top = isMobile(page) ? history.getByRole("listitem").first() : history.getByRole("row").nth(1);
+  const top = isMobile(page)
+    ? history.getByRole("listitem").first()
+    : history.getByRole("row").nth(1);
   const digits = scenario(page).price.replace(/(\d)(\d{3})$/, "$1\\s?$2");
   await expect(top).toContainText(new RegExp(`Сочи[\\s\\S]*${digits}`));
 });
@@ -107,10 +109,9 @@ test("AC21/AC3/AC6/AC4: register, empty history, logout, login again", async ({ 
   await expect(page.getByRole("banner").getByText(username, { exact: true })).toBeVisible();
 });
 
-test("AC19: no horizontal scroll on the login screen, the result view and the history", async ({
-  page,
-}) => {
-  test.skip(!isMobile(page), "360 px project only");
+test("AC19: no horizontal scroll on the login screen, the result view and the history", {
+  tag: "@mobile",
+}, async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Войти в демо-аккаунт" })).toBeVisible();
   await assertNoHorizontalScroll(page);
