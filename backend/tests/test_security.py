@@ -1,5 +1,5 @@
 import re
-from ipaddress import ip_network
+from ipaddress import ip_address
 from typing import Any
 
 import pytest
@@ -207,7 +207,7 @@ TRUSTED = parse_networks(["127.0.0.1", "10.0.0.0/8"])
 def test_parse_networks_supports_single_hosts_and_cidr() -> None:
     nets = parse_networks(["127.0.0.1", "10.0.0.0/8"])
 
-    assert ip_network("10.1.2.3/32").subnet_of(nets[1])
+    assert ip_address("10.1.2.3") in nets[1]
     assert len(nets) == 2
 
 
