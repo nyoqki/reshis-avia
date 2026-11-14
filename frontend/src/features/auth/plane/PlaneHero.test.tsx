@@ -41,19 +41,16 @@ class FakeIntersectionObserver {
 
 function setMedia(opts: { reduced?: boolean; wide?: boolean }) {
   const { reduced = false, wide = true } = opts;
-  vi.stubGlobal(
-    "matchMedia",
-    (query: string) => ({
-      matches: query.includes("prefers-reduced-motion") ? reduced : wide,
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }),
-  );
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("prefers-reduced-motion") ? reduced : wide,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }));
 }
 
 function intersect(isIntersecting: boolean) {
