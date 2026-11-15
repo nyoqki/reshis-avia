@@ -185,8 +185,8 @@ describe("ResultPanel", () => {
     const expected: Record<string, string> = {
       "Мест в самолёте": "900",
       "Желают купить": "970",
-      "Купят": "900",
-      "Свободно": "0",
+      Купят: "900",
+      Свободно: "0",
     };
     for (const [label, value] of Object.entries(expected)) {
       const c = card(label);
