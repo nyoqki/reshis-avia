@@ -156,6 +156,10 @@ describe("theme colours", () => {
     const colors = scheme === "light" ? light : dark;
     const c = (n: string) => colors[`--color-${n}`];
 
+    it(`TB-AC12: ${scheme} theme gray bars differ from yellow bars by lightness, not only hue`, () => {
+      expect(wcagRatio(c("sign"), c("bar"))).toBeGreaterThanOrEqual(1.5);
+    });
+
     it(`TB-AC3: ${scheme} theme text pairs pass 4.5:1 and |Lc| >= 60`, () => {
       for (const [fg, bg] of TEXT_PAIRS) {
         expect(c(fg), fg).toBeDefined();
