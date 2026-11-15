@@ -26,6 +26,8 @@
   --color-line-strong: oklch(0.6 0.01 260);
   --color-sign: oklch(0.87 0.17 92);
   --color-sign-hover: oklch(0.83 0.165 88);
+  /* pressed primary button, a step darker than both hovers; one value suits both themes */
+  --color-sign-active: oklch(0.79 0.16 86);
   --color-sign-ink: oklch(0.22 0.01 260);
   --color-sign-edge: oklch(0.6 0.13 85);
   --color-board: oklch(0.18 0.01 260);

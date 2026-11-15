@@ -39,6 +39,10 @@ describe("Button", () => {
       expect(classes.some((c) => c.startsWith("hover:"))).toBe(true);
       expect(classes).toContain("motion-safe:active:translate-y-px");
       expect(classes.some((c) => /^active:bg-/.test(c))).toBe(true);
+      // with reduced motion there is no 1 px press, so the fill alone has to show it
+      const rest = classes.find((c) => /^bg-/.test(c));
+      const pressed = classes.find((c) => /^active:bg-/.test(c))?.slice("active:".length);
+      expect(pressed).not.toBe(rest);
     },
   );
 

@@ -12,7 +12,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: "border-sign-edge bg-sign text-sign-ink hover:bg-sign-hover active:bg-sign",
+  primary: "border-sign-edge bg-sign text-sign-ink hover:bg-sign-hover active:bg-sign-active",
   secondary: "border-line-strong bg-paper-raised text-ink hover:bg-paper-sunken active:bg-line",
   ghost: "border-transparent bg-transparent text-ink hover:bg-paper-sunken active:bg-line",
   board: "border-board-line bg-flap text-board-ink hover:bg-flap-hi active:bg-board-line",

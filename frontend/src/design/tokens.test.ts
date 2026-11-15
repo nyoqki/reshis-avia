@@ -75,7 +75,8 @@ const TEXT_PAIRS: Array<[string, string]> = [
   ["board-ink", "flap-hi"],
   ["danger", "paper-raised"],
   ["warning", "paper-raised"],
-  // pressed (active) fills of buttons, tabs and segments; the primary button presses back to sign
+  // pressed (active) fills of buttons, tabs and segments; the primary button presses to sign-active
+  ["sign-ink", "sign-active"],
   ["ink", "line"],
   ["ink-2", "line"],
   ["board-ink", "board-line"],
@@ -91,6 +92,8 @@ const NON_TEXT_PAIRS: Array<[string, string]> = [
   ["sign-edge", "paper"],
   // the dashed seats line of the chart
   ["board-ink", "board"],
+  // the «?» icon of a pressed hint button on the board
+  ["board-ink-2", "board-line"],
 ];
 
 function braceBlock(source: string, start: number): string {

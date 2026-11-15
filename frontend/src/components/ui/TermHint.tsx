@@ -7,8 +7,8 @@ export interface TermHintProps {
 }
 
 const BUTTON: Record<"paper" | "board", string> = {
-  paper: "border-line-strong text-ink-2 hover:bg-paper-sunken",
-  board: "border-board-line text-board-ink-2 hover:bg-flap-hi",
+  paper: "border-line-strong text-ink-2 hover:bg-paper-sunken active:bg-line",
+  board: "border-board-line text-board-ink-2 hover:bg-flap-hi active:bg-board-line",
 };
 
 const PANEL: Record<"paper" | "board", string> = {

@@ -95,4 +95,19 @@ describe("TermHint", () => {
     const trigger = setup();
     expect(trigger).toHaveClass("size-6", "relative", "after:absolute", "after:size-11");
   });
+
+  it.each([
+    ["paper", "active:bg-line"],
+    ["board", "active:bg-board-line"],
+  ] as const)("TB-AC5: on %s the trigger has a pressed fill beside hover", (surface, pressed) => {
+    render(
+      <TermHint term="Купят" surface={surface}>
+        Столько мест реально купят.
+      </TermHint>,
+    );
+    const trigger = screen.getByRole("button", { name: "Что значит «Купят»" });
+    const classes = trigger.className.split(/\s+/);
+    expect(classes.some((c) => c.startsWith("hover:bg-"))).toBe(true);
+    expect(classes).toContain(pressed);
+  });
 });
