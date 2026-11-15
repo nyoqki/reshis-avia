@@ -44,7 +44,7 @@ export function AppHeader({ user, onLoggedOut }: Props) {
       await api.logout();
       onLoggedOut();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось выйти. Попробуйте ещё раз.");
+      setError(e instanceof Error ? e.message : "Не\u00a0удалось выйти. Попробуйте ещё раз.");
       setPending(false);
     }
   }

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { UserOut } from "../api/types";
 import { getStoredTheme } from "../lib/theme";
+import { looseSpaces } from "../test/typography";
 import { AppHeader } from "./AppHeader";
 
 const DEMO_NOTE = "Общий демо-аккаунт: историю расчётов видят все, кто в него входит";
@@ -79,6 +80,11 @@ describe("AppHeader layout", () => {
     const group = within(banner).getByText("alice").parentElement;
     expect(group).toHaveClass("order-3", "w-full", "lg:order-2", "lg:w-auto");
     expect(within(group as HTMLElement).getByRole("radio", { name: "Авто" })).toBeInTheDocument();
+  });
+
+  it("TB-AC20: the header text binds short words to the next word", () => {
+    const banner = renderHeader(DEMO);
+    expect(looseSpaces(banner.textContent ?? "")).toEqual([]);
   });
 
   it("TB-AC1: the shared-demo note is one slim line of text under the header row, not a boxed notice", () => {

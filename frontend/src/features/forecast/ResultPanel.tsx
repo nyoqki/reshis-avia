@@ -41,9 +41,9 @@ function Hint({ k }: { k: TermKey }) {
 const EXPLANATIONS: Record<ForecastResponse["limit"], string> = {
   none: "Спрос ниже числа мест: все желающие купят билет, часть мест останется свободной.",
   no_demand:
-    "При такой цене билет никто не купит: по формуле спрос ушёл ниже нуля, поэтому в карточке показан 0.",
+    "При такой цене билет никто не\u00a0купит: по\u00a0формуле спрос ушёл ниже нуля, поэтому в\u00a0карточке показан 0.",
   seats:
-    "Спрос выше числа мест, поэтому продажи упираются в места: самолёт заполнится, а часть желающих не получит билет.",
+    "Спрос выше числа мест, поэтому продажи упираются в\u00a0места: самолёт заполнится, а\u00a0часть желающих не\u00a0получит билет.",
 };
 
 function Card({
@@ -120,7 +120,7 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
 
         <div className="grid grid-cols-2 gap-3 @xl:grid-cols-4">
           <Card
-            label="Мест в самолёте"
+            label={"Мест в\u00a0самолёте"}
             value={values[0]}
             minCells={minCells}
             size={cellSize}
@@ -133,7 +133,7 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
             minCells={minCells}
             size={cellSize}
             index={1}
-            note={negative ? `по формуле: ${formatSigned(raw)}` : undefined}
+            note={negative ? `по\u00a0формуле: ${formatSigned(raw)}` : undefined}
           />
           <Card
             label="Купят"
@@ -183,7 +183,7 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
             </Button>
           </div>
           <p className="text-sm text-board-ink-2">
-            {`Коридор: ${formatRubRange(rec.corridor_low, rec.corridor_high)}, ширина ${rec.corridor_pct} % от рекомендованной цены`}
+            {`Коридор: ${formatRubRange(rec.corridor_low, rec.corridor_high)}, ширина ${rec.corridor_pct}\u00a0% от\u00a0рекомендованной цены`}
           </p>
           {rec.risky ? (
             <div className="flex items-center gap-2">

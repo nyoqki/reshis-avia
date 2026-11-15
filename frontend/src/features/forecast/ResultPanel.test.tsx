@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ForecastResponse } from "../../api/types";
+import { looseSpaces } from "../../test/typography";
 import { ResultPanel } from "./ResultPanel";
 
 const CONTROL: ForecastResponse = {
@@ -178,6 +179,21 @@ describe("ResultPanel", () => {
     second.unmount();
     render(<ResultPanel result={NO_DEMAND} onUseRecommended={() => {}} />);
     expect(screen.getByText("Нет спроса")).toBeInTheDocument();
+  });
+
+  it("TB-AC20: the board text binds short words to the next word and a dash to the word before it", () => {
+    const none: ForecastResponse = { ...CONTROL, limit: "none", buys: 800, free_seats: 100 };
+    const risky: ForecastResponse = {
+      ...SEATS,
+      recommendation: { ...SEATS.recommendation, risky: true },
+    };
+    for (const result of [CONTROL, NO_DEMAND, none, risky]) {
+      const { container, unmount } = render(
+        <ResultPanel result={result} onUseRecommended={() => {}} />,
+      );
+      expect(looseSpaces(container.textContent ?? "")).toEqual([]);
+      unmount();
+    }
   });
 
   it("TB-AC10: each card's flap layer is aria-hidden and the card text is only label plus final value", () => {

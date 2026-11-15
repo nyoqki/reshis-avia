@@ -21,7 +21,8 @@ type State =
   | { status: "ready"; items: HistoryItem[]; fresh: ReadonlySet<number> };
 
 const BLANK_CELLS = Array.from({ length: 8 }, (_, i) => `blank-${i}`);
-const EMPTY_TEXT = "Пока нет расчётов. Рассчитайте первый\u00a0— он появится здесь.";
+const EMPTY_TEXT = "Пока нет расчётов. Рассчитайте первый\u00a0— он\u00a0появится здесь.";
+const FAILED = "Что-то пошло не\u00a0так. Попробуйте ещё раз.";
 
 function routeLabel(item: HistoryItem): string {
   return `${item.origin} → ${item.destination}`;
@@ -70,7 +71,7 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
         }
         setState({
           status: "error",
-          message: e instanceof ApiError ? e.detail : "Что-то пошло не так. Попробуйте ещё раз.",
+          message: e instanceof ApiError ? e.detail : FAILED,
         });
       });
   }, []);
@@ -172,8 +173,13 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
                   <span className="text-sm text-board-ink-2">
                     {formatDate(item.date)} · {formatRub(item.price)}
                   </span>
-                  <span className="font-mono text-sm tabular-nums">
-                    Желают {formatInt(displayWants(item.wants))} · купят {formatInt(item.buys)}
+                  {/* mono for the numbers only, as in the table's number columns */}
+                  <span className="text-sm">
+                    Желают{" "}
+                    <span className="font-mono tabular-nums">
+                      {formatInt(displayWants(item.wants))}
+                    </span>{" "}
+                    · купят <span className="font-mono tabular-nums">{formatInt(item.buys)}</span>
                   </span>
                   <span className="text-sm text-board-ink-2">
                     {formatDateTime(item.created_at)}

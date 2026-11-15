@@ -29,14 +29,16 @@ type RoutesState =
 
 // The API takes whole rubles in this range (backend schemas.py); the form says so before sending.
 const MAX_PRICE = 1_000_000;
-const PRICE_RULE = `Укажите цену в целых рублях: от 1 до ${formatRub(MAX_PRICE)}`;
+const PRICE_RULE = `Укажите цену в\u00a0целых рублях: от\u00a01 до\u00a0${formatRub(MAX_PRICE)}`;
+const FAILED = "Что-то пошло не\u00a0так. Попробуйте ещё раз.";
 
 function waitMessage(retryAfter: number | null): string {
-  if (retryAfter === null) return "Слишком много запросов. Подождите немного и попробуйте снова.";
+  if (retryAfter === null)
+    return "Слишком много запросов. Подождите немного и\u00a0попробуйте снова.";
   if (retryAfter < 120) {
-    return `Слишком много запросов. Подождите ${Math.max(1, retryAfter)} сек и попробуйте снова.`;
+    return `Слишком много запросов. Подождите ${Math.max(1, retryAfter)}\u00a0сек и\u00a0попробуйте снова.`;
   }
-  return `Слишком много запросов. Подождите ${Math.ceil(retryAfter / 60)} мин и попробуйте снова.`;
+  return `Слишком много запросов. Подождите ${Math.ceil(retryAfter / 60)}\u00a0мин и\u00a0попробуйте снова.`;
 }
 
 interface StoredResult {
@@ -119,7 +121,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
         }
         setState({
           status: "error",
-          message: e instanceof ApiError ? e.detail : "Что-то пошло не так. Попробуйте ещё раз.",
+          message: e instanceof ApiError ? e.detail : FAILED,
         });
       });
   }, []);
@@ -174,7 +176,7 @@ export function ForecastPage({ onSessionExpired }: Props) {
       } else if (e instanceof ApiError && e.status === 429) {
         setFormError(waitMessage(e.retryAfter));
       } else {
-        setFormError(e instanceof ApiError ? e.detail : "Что-то пошло не так. Попробуйте ещё раз.");
+        setFormError(e instanceof ApiError ? e.detail : FAILED);
       }
     } finally {
       inFlight.current = false;

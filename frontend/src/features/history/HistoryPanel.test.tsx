@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "../../api/client";
 import type { HistoryItem } from "../../api/types";
+import { looseSpaces } from "../../test/typography";
 import { HistoryPanel } from "./HistoryPanel";
 
 vi.mock("../../api/client", async (importOriginal) => {
@@ -164,6 +165,28 @@ describe("HistoryPanel", () => {
     const blanks = container.querySelectorAll('.flap-cell[data-tone="blank"]');
     expect(blanks.length).toBeGreaterThan(0);
     for (const b of blanks) expect(b.closest('[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it("TB-AC20: the phone card sets only the numbers in mono; the words stay in the body face", async () => {
+    vi.mocked(api.history).mockResolvedValue({ items: [OLDER] });
+    render(<HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />);
+    const [item] = await screen.findAllByRole("listitem");
+    const wants = within(item).getByText("970");
+    const buys = within(item).getByText("412");
+    for (const n of [wants, buys]) expect(n).toHaveClass("font-mono", "tabular-nums");
+    const line = wants.parentElement as HTMLElement;
+    expect(line).toBe(buys.parentElement);
+    expect(line).toHaveTextContent(/^Желают 970 · купят 412$/);
+    expect(line).not.toHaveClass("font-mono");
+  });
+
+  it("TB-AC20: the history text binds short words to the next word and a dash to the word before it", async () => {
+    vi.mocked(api.history).mockResolvedValue({ items: [] });
+    const { container } = render(
+      <HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />,
+    );
+    await screen.findByText(/Пока нет расчётов/);
+    expect(looseSpaces(container.textContent ?? "")).toEqual([]);
   });
 
   it("TB-AC13: the empty text comes first, then a single row of blank cells", async () => {

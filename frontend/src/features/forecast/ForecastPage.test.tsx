@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vite
 
 import { ApiError } from "../../api/client";
 import type { ForecastResponse, HistoryItem, RoutesResponse } from "../../api/types";
+import { looseSpaces } from "../../test/typography";
 import { ForecastPage } from "./ForecastPage";
 
 vi.mock("../../api/client", async (importOriginal) => {
@@ -131,7 +132,7 @@ describe("ForecastPage submit", () => {
 
   // The API takes whole rubles from 1 to 1 000 000 (schemas.py); anything else is answered here,
   // in words, with focus on the field so a screen reader reads the message.
-  const PRICE_RULE = /Укажите цену в целых рублях: от 1 до 1\s000\s000\s₽/;
+  const PRICE_RULE = /Укажите цену в\sцелых рублях: от\s1 до\s1\s000\s000\s₽/;
 
   it.each([
     ["left empty", ""],
@@ -237,6 +238,31 @@ describe("ForecastPage submit", () => {
     await submit(user);
 
     expect(await screen.findByText(/60\s(сек|с\b)|минут/i)).toBeVisible();
+  });
+
+  it("TB-AC20: the price rule binds short words to the next word", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await user.clear(await screen.findByLabelText(/^Цена билета/));
+    await submit(user);
+    const rule = await screen.findByText(/Укажите цену/);
+    expect(looseSpaces(rule.textContent ?? "")).toEqual([]);
+  });
+
+  it("TB-AC20: the empty board and the wait message bind short words to the next word", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.forecast).mockRejectedValue(
+      new ApiError(429, "Слишком много запросов. Попробуйте чуть позже.", {}, 60),
+    );
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await screen.findByRole("button", { name: "Рассчитать" });
+    const board = screen.getByRole("region", { name: "Табло прогноза" });
+    expect(looseSpaces(board.textContent ?? "")).toEqual([]);
+    await submit(user);
+    const message = await screen.findByText(/60\s(сек|с\b)|минут/i);
+    expect(looseSpaces(message.textContent ?? "")).toEqual([]);
   });
 
   it("AC19: another server error shows its detail and «Повторить»", async () => {

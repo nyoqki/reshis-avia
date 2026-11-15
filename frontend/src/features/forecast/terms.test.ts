@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { looseSpaces } from "../../test/typography";
 import { TERMS, type TermKey } from "./terms";
 
 const NAMES: Record<TermKey, string> = {
@@ -27,7 +28,7 @@ describe("TERMS", () => {
   });
 
   it("TB-AC15: the sellout text says what replaces 0 % and 100 % in a full sentence", () => {
-    expect(TERMS.sellout.text).toContain("Вместо 0 % и 100 % пишем «< 10 %» и «> 90 %»");
+    expect(TERMS.sellout.text).toContain("Вместо 0 % и 100 % пишем «< 10 %» и «> 90 %»");
   });
 
   it("TB-AC15: the risky text names the 15 % threshold", () => {
@@ -46,6 +47,12 @@ describe("TERMS", () => {
     expect(text).toContain("50 %");
     expect(text).toContain("90 %");
     expect(text).toMatch(/50 %[^.]*медиан/);
+  });
+
+  it("TB-AC20: every text binds short words to the next word and a dash to the word before it", () => {
+    for (const { text } of Object.values(TERMS)) {
+      expect(looseSpaces(text)).toEqual([]);
+    }
   });
 
   it("TB-AC20: every text uses NBSP before %, «ёлочки» for quotes and no ASCII hyphen between numbers", () => {

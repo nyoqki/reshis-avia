@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import pkgSource from "../../../package.json?raw";
 import type { ForecastResponse } from "../../api/types";
+import { looseSpaces } from "../../test/typography";
 import { ScenarioChart } from "./ScenarioChart";
 
 const QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
@@ -259,6 +260,17 @@ describe("ScenarioChart", () => {
     expect(labelX + "Мест: 900".length * 14 * 0.57).toBeLessThanOrEqual(
       Number(svg.getAttribute("width")),
     );
+  });
+
+  it("TB-AC20: the chart text binds short words to the next word and a dash to the word before it", () => {
+    const { container, unmount } = render(<ScenarioChart result={RESULT} />);
+    expect(looseSpaces(container.textContent ?? "")).toEqual([]);
+    unmount();
+    // the readout of a bar whose formula went below zero
+    const empty = render(<ScenarioChart result={EMPTY} />);
+    screen.getAllByRole("button", { name: /желают/ })[0].focus();
+    expect(screen.getByText(/по формуле/)).toBeVisible();
+    expect(looseSpaces(empty.container.textContent ?? "")).toEqual([]);
   });
 
   it("TB-AC12: the scenario table is capped in width, so its numbers sit near their labels", () => {

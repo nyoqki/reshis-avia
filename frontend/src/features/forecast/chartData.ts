@@ -1,7 +1,7 @@
 import type { ForecastResponse } from "../../api/types";
 import { displayWants } from "../../lib/format";
 
-const NBSP = " ";
+const NBSP = "\u00a0";
 
 /** A bar is coloured by one thing only, whether demand reaches the seats; the median gets an outline. */
 export type BarKind = "below" | "hits";

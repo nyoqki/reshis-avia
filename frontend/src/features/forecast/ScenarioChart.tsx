@@ -200,7 +200,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
   return (
     <section aria-label="Распределение спроса" className="grid gap-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold">Распределение спроса по сценариям</h2>
+        <h2 className="text-lg font-semibold">{`Распределение спроса по${NBSP}сценариям`}</h2>
         <TermHint term={TERMS.scenarios.term}>{TERMS.scenarios.text}</TermHint>
       </div>
 
@@ -421,7 +421,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                 <>
                   <span className="font-semibold">{model.labels[active]}</span>
                   <span>
-                    {`Желают: ${formatInt(model.values[active])}${raw < 0 ? ` (по формуле: ${formatSigned(raw)})` : ""}`}
+                    {`Желают: ${formatInt(model.values[active])}${raw < 0 ? ` (по${NBSP}формуле: ${formatSigned(raw)})` : ""}`}
                   </span>
                   <span>{`Купят: ${formatInt(result.scenarios[active]?.buys ?? 0)}`}</span>
                 </>
