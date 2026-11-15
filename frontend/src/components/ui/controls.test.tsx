@@ -7,6 +7,15 @@ import { Input } from "./inputs";
 import { SegmentedControl } from "./SegmentedControl";
 import { Tabs } from "./Tabs";
 
+describe("Input", () => {
+  it("TB-AC5: a read-only input sits on the sunken paper with the secondary ink in both themes, so it never reads as editable", () => {
+    render(<Input aria-label="Город вылета" readOnly value="Москва" />);
+    const input = screen.getByLabelText("Город вылета");
+    // tokens, not dark: variants: the theme swaps the token values under one class
+    expect(input).toHaveClass("read-only:bg-paper-sunken", "read-only:text-ink-2");
+  });
+});
+
 describe("Field", () => {
   it("TB-AC5: links the hint to the control through aria-describedby and the label through htmlFor", () => {
     render(
