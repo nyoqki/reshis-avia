@@ -67,7 +67,7 @@ function Card({
         {hint ? <Hint k={hint} /> : null}
       </span>
       <FlapNumber value={value} minCells={minCells} delayMs={index * 120} />
-      {note ? <span className="text-xs text-board-ink-2">{note}</span> : null}
+      {note ? <span className="text-sm text-board-ink-2">{note}</span> : null}
     </div>
   );
 }
@@ -137,7 +137,7 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
             <Hint k="recommended" />
           </span>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="font-mono text-2xl font-semibold tabular-nums">
+            <span className="font-mono text-xl font-semibold tabular-nums">
               {formatRub(rec.price)}
             </span>
             <Button

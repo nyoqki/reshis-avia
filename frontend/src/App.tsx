@@ -16,7 +16,7 @@ export default function App() {
 
   if (session.status === "loading") {
     return (
-      <main className="shell" aria-busy="true">
+      <main className="mx-auto max-w-5xl px-4 py-6" aria-busy="true">
         <Skeleton />
       </main>
     );
@@ -24,7 +24,7 @@ export default function App() {
 
   if (session.status === "anonymous" || !session.user) {
     return (
-      <main className="shell">
+      <main className="mx-auto max-w-5xl px-4 py-6">
         <AuthScreen onAuthenticated={session.setUser} sessionExpired={session.sessionExpired} />
       </main>
     );
@@ -33,7 +33,7 @@ export default function App() {
   return (
     <>
       <AppHeader user={session.user} onLoggedOut={() => session.setUser(null)} />
-      <main className="shell">
+      <main className="mx-auto max-w-5xl px-4 py-6">
         <ForecastPage onSessionExpired={session.markExpired} />
       </main>
     </>

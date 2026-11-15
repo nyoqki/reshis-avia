@@ -176,7 +176,7 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
                   <span className="font-mono text-sm tabular-nums">
                     Желают {formatInt(displayWants(item.wants))} · купят {formatInt(item.buys)}
                   </span>
-                  <span className="text-xs text-board-ink-2">
+                  <span className="text-sm text-board-ink-2">
                     {formatDateTime(item.created_at)}
                   </span>
                 </button>

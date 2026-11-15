@@ -45,7 +45,7 @@ export function ForecastForm({ routes, value, onChange, onSubmit, pending, error
     <form
       onSubmit={submit}
       noValidate
-      className="grid gap-4 rounded-board border border-line bg-paper-raised p-5"
+      className="grid gap-4 rounded-board border border-line bg-paper-raised p-4 sm:p-6"
     >
       <Field id="forecast-origin" label="Город вылета">
         {(control) => <Input {...control} type="text" value={routes.origin} readOnly />}
