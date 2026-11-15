@@ -70,6 +70,15 @@ const TEXT_PAIRS: Array<[string, string]> = [
   ["success", "paper"],
   ["board-danger", "board"],
   ["board-warning", "board"],
+  // hover fills: primary and board buttons, error and warning text inside the white form card
+  ["sign-ink", "sign-hover"],
+  ["board-ink", "flap-hi"],
+  ["danger", "paper-raised"],
+  ["warning", "paper-raised"],
+  // pressed (active) fills of buttons, tabs and segments; the primary button presses back to sign
+  ["ink", "line"],
+  ["ink-2", "line"],
+  ["board-ink", "board-line"],
 ];
 
 const NON_TEXT_PAIRS: Array<[string, string]> = [
@@ -80,6 +89,8 @@ const NON_TEXT_PAIRS: Array<[string, string]> = [
   ["board-focus", "board"],
   ["board-focus", "flap"],
   ["sign-edge", "paper"],
+  // the dashed seats line of the chart
+  ["board-ink", "board"],
 ];
 
 function braceBlock(source: string, start: number): string {
@@ -99,7 +110,7 @@ function colorDecls(block: string): Record<string, string> {
 }
 
 describe("contrast.ts reference values", () => {
-  it("AC3: reproduces WCAG and APCA reference values", () => {
+  it("TB-AC3: reproduces WCAG and APCA reference values", () => {
     const a = {
       fg: "oklch(0.46 0.012 260)",
       bg: "oklch(0.972 0.005 90)",
@@ -114,7 +125,7 @@ describe("contrast.ts reference values", () => {
     expect(Math.abs(apcaLc(b.fg, b.bg) + 66.7)).toBeLessThanOrEqual(0.5);
   });
 
-  it("AC3: parseColor handles hex and returns gamma-encoded sRGB in 0..1", () => {
+  it("TB-AC3: parseColor handles hex and returns gamma-encoded sRGB in 0..1", () => {
     const [r, g, b] = parseColor("#ffffff");
     expect([r, g, b].every((c) => Math.abs(c - 1) < 0.005)).toBe(true);
     const out = parseColor("oklch(0.5 0.4 30)");
@@ -126,13 +137,13 @@ describe("theme colours", () => {
   const light = readThemeColors(css, "light");
   const dark = readThemeColors(css, "dark");
 
-  it("AC2: every token listed in the plan exists in @theme with its value", () => {
+  it("TB-AC2: every token listed in the plan exists in @theme with its value", () => {
     for (const [name, value] of Object.entries(LIGHT_TOKENS)) {
       expect(light[`--color-${name}`], name).toBe(value);
     }
   });
 
-  it("AC2: dark overrides carry the planned values and others fall through to light", () => {
+  it("TB-AC2: dark overrides carry the planned values and others fall through to light", () => {
     for (const [name, value] of Object.entries(DARK_OVERRIDES)) {
       expect(dark[`--color-${name}`], name).toBe(value);
     }
@@ -145,7 +156,7 @@ describe("theme colours", () => {
     const colors = scheme === "light" ? light : dark;
     const c = (n: string) => colors[`--color-${n}`];
 
-    it(`AC3: ${scheme} theme text pairs pass 4.5:1 and |Lc| >= 60`, () => {
+    it(`TB-AC3: ${scheme} theme text pairs pass 4.5:1 and |Lc| >= 60`, () => {
       for (const [fg, bg] of TEXT_PAIRS) {
         expect(c(fg), fg).toBeDefined();
         expect(c(bg), bg).toBeDefined();
@@ -155,7 +166,7 @@ describe("theme colours", () => {
       expect(Math.abs(apcaLc(c("ink"), c("paper")))).toBeGreaterThanOrEqual(75);
     });
 
-    it(`AC3: ${scheme} theme non-text pairs pass 3:1`, () => {
+    it(`TB-AC3: ${scheme} theme non-text pairs pass 3:1`, () => {
       for (const [fg, bg] of NON_TEXT_PAIRS) {
         expect(wcagRatio(c(fg), c(bg)), `${fg} on ${bg}`).toBeGreaterThanOrEqual(3);
       }
@@ -194,14 +205,14 @@ describe("readThemeColors", () => {
 /* legacy aliases: end */
 `;
 
-  it("AC2: light returns only --color-* of the @theme static block", () => {
+  it("TB-AC2: light returns only --color-* of the @theme static block", () => {
     expect(readThemeColors(sample, "light")).toEqual({
       "--color-paper": "oklch(0.97 0.005 90)",
       "--color-ink": "#111111",
     });
   });
 
-  it("AC2: dark merges the data-theme dark overrides over light", () => {
+  it("TB-AC2: dark merges the data-theme dark overrides over light", () => {
     expect(readThemeColors(sample, "dark")).toEqual({
       "--color-paper": "oklch(0.2 0.01 260)",
       "--color-ink": "#111111",
@@ -211,7 +222,7 @@ describe("readThemeColors", () => {
 });
 
 describe("index.css structure", () => {
-  it("AC2: media dark block and data-theme dark block override identical variables", () => {
+  it("TB-AC2: media dark block and data-theme dark block override identical variables", () => {
     const mediaStart = css.indexOf("@media (prefers-color-scheme: dark)");
     expect(mediaStart).toBeGreaterThanOrEqual(0);
     const media = colorDecls(braceBlock(css, mediaStart));
@@ -225,7 +236,7 @@ describe("index.css structure", () => {
     }
   });
 
-  it("AC2: tokens are in @theme static with motion tokens, color-scheme on :root", () => {
+  it("TB-AC2: tokens are in @theme static with motion tokens, color-scheme on :root", () => {
     const start = css.search(/@theme\s+static\s*\{/);
     expect(start).toBeGreaterThanOrEqual(0);
     const block = braceBlock(css, start);

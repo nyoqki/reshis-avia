@@ -4,7 +4,7 @@ import forecastCsv from "../../../../data/seasonal_forecast.csv?raw";
 import { DEPARTURES, FORECAST_PERIOD, ORIGIN, parseRoutesCsv } from "./departures";
 
 describe("departures data", () => {
-  it("AC8: DEPARTURES equals parseRoutesCsv of data/routes.csv (route, code, city, base price, order)", () => {
+  it("TB-AC8: DEPARTURES equals parseRoutesCsv of data/routes.csv (route, code, city, base price, order)", () => {
     const parsed = parseRoutesCsv(routesCsv);
     expect(parsed).toHaveLength(5);
     expect(DEPARTURES).toEqual(parsed);
@@ -17,7 +17,7 @@ describe("departures data", () => {
     expect(DEPARTURES.map((d) => d.code)).toEqual(["AER", "LED", "KGD", "OVB", "MRV"]);
   });
 
-  it("AC8: FORECAST_PERIOD equals the min and max of the date column of data/seasonal_forecast.csv", () => {
+  it("TB-AC8: FORECAST_PERIOD equals the min and max of the date column of data/seasonal_forecast.csv", () => {
     const [header, ...lines] = forecastCsv.trim().split(/\r?\n/);
     const col = header.split(",").indexOf("date");
     expect(col).toBeGreaterThanOrEqual(0);
@@ -25,7 +25,7 @@ describe("departures data", () => {
     expect(FORECAST_PERIOD).toEqual({ from: dates[0], to: dates[dates.length - 1] });
   });
 
-  it("AC8: ORIGIN is Москва MOW and every route starts with MOW-", () => {
+  it("TB-AC8: ORIGIN is Москва MOW and every route starts with MOW-", () => {
     expect(ORIGIN).toEqual({ city: "Москва", code: "MOW" });
     for (const d of DEPARTURES) {
       expect(d.route.startsWith("MOW-")).toBe(true);

@@ -4,7 +4,7 @@ import { claimOnce, resetOnceForTests } from "./once";
 beforeEach(() => resetOnceForTests());
 
 describe("claimOnce", () => {
-  it("AC7: returns true once per key and false afterwards; resetOnceForTests clears it", () => {
+  it("TB-AC7: returns true once per key and false afterwards; resetOnceForTests clears it", () => {
     expect(claimOnce("a")).toBe(true);
     expect(claimOnce("a")).toBe(false);
     expect(claimOnce("b")).toBe(true);

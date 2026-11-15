@@ -43,21 +43,21 @@ describe("motion constants", () => {
 });
 
 describe("prefersReducedMotion", () => {
-  it("AC16: reflects the media query", () => {
+  it("TB-AC16: reflects the media query", () => {
     mockMedia(true);
     expect(prefersReducedMotion()).toBe(true);
     mockMedia(false);
     expect(prefersReducedMotion()).toBe(false);
   });
 
-  it("AC16: is false without matchMedia", () => {
+  it("TB-AC16: is false without matchMedia", () => {
     Object.defineProperty(window, "matchMedia", { writable: true, value: undefined });
     expect(prefersReducedMotion()).toBe(false);
   });
 });
 
 describe("useReducedMotion", () => {
-  it("AC16: updates when the media query fires change", () => {
+  it("TB-AC16: updates when the media query fires change", () => {
     const media = mockMedia(false);
     const { result } = renderHook(() => useReducedMotion());
     expect(result.current).toBe(false);

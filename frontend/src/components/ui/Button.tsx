@@ -12,10 +12,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: "border-sign-edge bg-sign text-sign-ink hover:bg-sign-hover",
-  secondary: "border-line-strong bg-paper-raised text-ink hover:bg-paper-sunken",
-  ghost: "border-transparent bg-transparent text-ink hover:bg-paper-sunken",
-  board: "border-board-line bg-flap text-board-ink hover:bg-flap-hi",
+  primary: "border-sign-edge bg-sign text-sign-ink hover:bg-sign-hover active:bg-sign",
+  secondary: "border-line-strong bg-paper-raised text-ink hover:bg-paper-sunken active:bg-line",
+  ghost: "border-transparent bg-transparent text-ink hover:bg-paper-sunken active:bg-line",
+  board: "border-board-line bg-flap text-board-ink hover:bg-flap-hi active:bg-board-line",
 };
 
 const SIZE: Record<NonNullable<ButtonProps["size"]>, string> = {
@@ -42,7 +42,9 @@ export function Button({
 }: ButtonProps) {
   const classes = [
     "inline-flex items-center justify-center gap-2 rounded-control border font-sans font-medium",
-    "disabled:cursor-not-allowed disabled:opacity-60",
+    // pressed: a step past the hover fill, plus a 1px press where motion is allowed
+    "motion-safe:active:translate-y-px",
+    "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:translate-y-0",
     VARIANT[variant],
     SIZE[size],
     block ? "w-full" : "",

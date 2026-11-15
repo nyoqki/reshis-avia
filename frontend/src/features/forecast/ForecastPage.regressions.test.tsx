@@ -144,7 +144,7 @@ describe("ForecastPage regressions", () => {
     return { user, use, status };
   }
 
-  it("AC14: after «Подставить» the status announces the substituted price and focus stays on the button", async () => {
+  it("TB-AC14: after «Подставить» the status announces the substituted price and focus stays on the button", async () => {
     const { user, use, status } = await calculated();
     vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
     await user.click(use);
@@ -158,7 +158,7 @@ describe("ForecastPage regressions", () => {
     expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 
-  it("AC14: «Подставить» then a regular «Рассчитать» announces without the substitution prefix", async () => {
+  it("TB-AC14: «Подставить» then a regular «Рассчитать» announces without the substitution prefix", async () => {
     const { user, use, status } = await calculated();
     vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
     await user.click(use);
@@ -172,7 +172,7 @@ describe("ForecastPage regressions", () => {
     expect(status).not.toHaveTextContent(/Подставлена/);
   });
 
-  it("AC14: a failed substituted request followed by a successful regular submit announces without the prefix", async () => {
+  it("TB-AC14: a failed substituted request followed by a successful regular submit announces without the prefix", async () => {
     const { user, use, status } = await calculated();
     vi.mocked(api.forecast).mockRejectedValueOnce(new ApiError(500, "Сервер временно недоступен."));
     await user.click(use);

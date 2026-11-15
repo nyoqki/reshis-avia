@@ -7,7 +7,7 @@ import { Notice } from "./Notice";
 import { Skeleton } from "./Skeleton";
 
 describe("Button", () => {
-  it("AC5: defaults to type=button and forwards onClick", async () => {
+  it("TB-AC5: defaults to type=button and forwards onClick", async () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Прогноз</Button>);
     const btn = screen.getByRole("button", { name: "Прогноз" });
@@ -16,7 +16,7 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it("AC5: a loading Button is disabled, aria-busy and shows loadingLabel; click does not call onClick", async () => {
+  it("TB-AC5: a loading Button is disabled, aria-busy and shows loadingLabel; click does not call onClick", async () => {
     const onClick = vi.fn();
     render(
       <Button loading loadingLabel="Считаем…" onClick={onClick}>
@@ -31,7 +31,18 @@ describe("Button", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("AC5: a disabled Button does not call onClick", async () => {
+  it.each(["primary", "secondary", "ghost", "board"] as const)(
+    "TB-AC5: the %s Button has a pressed (active) style beside hover",
+    (variant) => {
+      render(<Button variant={variant}>Прогноз</Button>);
+      const classes = screen.getByRole("button", { name: "Прогноз" }).className.split(/\s+/);
+      expect(classes.some((c) => c.startsWith("hover:"))).toBe(true);
+      expect(classes).toContain("motion-safe:active:translate-y-px");
+      expect(classes.some((c) => /^active:bg-/.test(c))).toBe(true);
+    },
+  );
+
+  it("TB-AC5: a disabled Button does not call onClick", async () => {
     const onClick = vi.fn();
     render(
       <Button disabled onClick={onClick}>
@@ -44,7 +55,7 @@ describe("Button", () => {
 });
 
 describe("Notice", () => {
-  it("AC19: an error Notice has role alert and its «Повторить» button calls onRetry", async () => {
+  it("TB-AC19: an error Notice has role alert and its «Повторить» button calls onRetry", async () => {
     const onRetry = vi.fn();
     render(
       <Notice tone="error" onRetry={onRetry}>
@@ -57,7 +68,7 @@ describe("Notice", () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it("AC19: a Notice without onRetry has no button; an info Notice has no role; role can be overridden to status", () => {
+  it("TB-AC19: a Notice without onRetry has no button; an info Notice has no role; role can be overridden to status", () => {
     const { rerender } = render(<Notice tone="info">Подсказка</Notice>);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -72,14 +83,14 @@ describe("Notice", () => {
 });
 
 describe("Badge", () => {
-  it("AC5: renders its text", () => {
+  it("TB-AC5: renders its text", () => {
     render(<Badge tone="demo">Демо</Badge>);
     expect(screen.getByText("Демо")).toBeInTheDocument();
   });
 });
 
 describe("Skeleton", () => {
-  it("AC5: has class skeleton and aria-busy=true; the board variant renders the requested rows hidden from assistive tech", () => {
+  it("TB-AC5: has class skeleton and aria-busy=true; the board variant renders the requested rows hidden from assistive tech", () => {
     const { container, rerender } = render(<Skeleton />);
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveClass("skeleton");

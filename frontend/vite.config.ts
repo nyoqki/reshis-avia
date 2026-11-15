@@ -6,8 +6,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: { "/api": "http://127.0.0.1:8000" },
-    // tests read ../data/*.csv with ?raw
-    fs: { allow: [".."] },
+    // tests read ../data/*.csv with ?raw; allow only that folder, not the repo root (var/ holds the
+    // SQLite database). Paths resolve against this folder.
+    fs: { allow: [".", "../data"] },
   },
   test: {
     // vitest stubs CSS imports (even ?raw) to "" unless included; tokens.test.ts reads index.css?raw

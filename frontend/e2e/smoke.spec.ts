@@ -129,7 +129,7 @@ function digitsOf(text: string | null): string {
   return (text ?? "").replace(/\D/g, "");
 }
 
-test("AC6: brand files, manifest, icons, the font file and the absolute og:image are served", async ({
+test("TB-AC6: brand files, manifest, icons, the font file and the absolute og:image are served", async ({
   page,
 }) => {
   const manifestRes = await page.request.get("/manifest.json");
@@ -179,7 +179,7 @@ test("AC6: brand files, manifest, icons, the font file and the absolute og:image
   expect(fontRes.headers()["content-type"]).toContain("font/woff2");
 });
 
-test("AC14: «Подставить» puts the recommended price into the form, the board header and the history", async ({
+test("TB-AC14: «Подставить» puts the recommended price into the form, the board header and the history", async ({
   page,
 }) => {
   await demoLogin(page);
@@ -217,7 +217,7 @@ test("AC14: «Подставить» puts the recommended price into the form, t
   }).toPass();
 });
 
-test("AC9/AC16: with reduced motion the login screen shows the plane still and no canvas", async ({
+test("TB-AC9/TB-AC16: with reduced motion the login screen shows the plane still and no canvas", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -229,7 +229,7 @@ test("AC9/AC16: with reduced motion the login screen shows the plane still and n
 });
 
 // The phone header shows icons only; the labelled segments are desktop, so this test is tagged @desktop.
-test("AC17: the «Тёмная» segment switches the theme", { tag: "@desktop" }, async ({ page }) => {
+test("TB-AC17: the «Тёмная» segment switches the theme", { tag: "@desktop" }, async ({ page }) => {
   await demoLogin(page);
   const banner = page.getByRole("banner");
   await banner.getByText("Тёмная", { exact: true }).click();
@@ -237,7 +237,7 @@ test("AC17: the «Тёмная» segment switches the theme", { tag: "@desktop" 
   await expect(page.getByRole("radio", { name: "Тёмная" })).toBeChecked();
 });
 
-test("AC4: Golos Text is loaded", async ({ page }) => {
+test("TB-AC4: Golos Text is loaded", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Войти в демо-аккаунт" })).toBeVisible();
   const result = await page.evaluate(async () => {

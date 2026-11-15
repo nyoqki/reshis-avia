@@ -78,7 +78,7 @@ describe("App session routing", () => {
     expect(screen.queryByText("alice")).not.toBeInTheDocument();
   });
 
-  it("AC17: the banner holds a radio group «Тема» with radios Авто, Светлая, Тёмная", async () => {
+  it("TB-AC17: the banner holds a radio group «Тема» with radios Авто, Светлая, Тёмная", async () => {
     stubFetch(200);
 
     render(<App />);
@@ -92,7 +92,7 @@ describe("App session routing", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
   });
 
-  it("AC7: the banner heading is named «Решись Авиа»", async () => {
+  it("TB-AC7: the banner heading is named «Решись Авиа»", async () => {
     stubFetch(200);
 
     render(<App />);
@@ -103,7 +103,7 @@ describe("App session routing", () => {
     ).toBeInTheDocument();
   });
 
-  it("AC7: the header logo plays its intro on its first mount even when a hero logo mounted earlier in the page load", async () => {
+  it("TB-AC7: the header logo plays its intro on its first mount even when a hero logo mounted earlier in the page load", async () => {
     stubFetch(200);
     const hero = render(<Logo size="hero" />);
     expect(hero.container.querySelector("[data-intro]")?.getAttribute("data-intro")).toBe("true");

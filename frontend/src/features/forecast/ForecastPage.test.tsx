@@ -312,7 +312,7 @@ describe("ForecastPage recommended price", () => {
     return { user, use };
   }
 
-  it("AC14: clicking «Подставить» sets the price to 9500 and sends a second forecast for the same route and date", async () => {
+  it("TB-AC14: clicking «Подставить» sets the price to 9500 and sends a second forecast for the same route and date", async () => {
     const { user, use } = await calculated();
     vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
     await user.click(use);
@@ -323,7 +323,7 @@ describe("ForecastPage recommended price", () => {
     expect(second).toEqual({ ...first, price: 9500 });
   });
 
-  it("AC14: a second click on «Подставить» while that request is pending sends nothing more", async () => {
+  it("TB-AC14: a second click on «Подставить» while that request is pending sends nothing more", async () => {
     const { user, use } = await calculated();
     vi.mocked(api.forecast).mockReturnValueOnce(new Promise<ForecastResponse>(() => {}));
     await user.click(use);
@@ -333,7 +333,7 @@ describe("ForecastPage recommended price", () => {
     expect(api.forecast).toHaveBeenCalledTimes(2);
   });
 
-  it("AC10: before the first calculation the empty board shows a prompt and no card label", async () => {
+  it("TB-AC10: before the first calculation the empty board shows a prompt and no card label", async () => {
     vi.mocked(api.routes).mockResolvedValue(ROUTES);
     render(<ForecastPage onSessionExpired={() => {}} />);
     await screen.findByRole("button", { name: "Рассчитать" });
@@ -348,7 +348,7 @@ describe("ForecastPage recommended price", () => {
     expect(prompt.length).toBeGreaterThan(0);
   });
 
-  it("AC10: the empty board prompt does not contain «Пока нет расчётов»", async () => {
+  it("TB-AC10: the empty board prompt does not contain «Пока нет расчётов»", async () => {
     vi.mocked(api.routes).mockResolvedValue(ROUTES);
     render(<ForecastPage onSessionExpired={() => {}} />);
     await screen.findByRole("button", { name: "Рассчитать" });
@@ -361,7 +361,7 @@ describe("ForecastPage recommended price", () => {
     for (const el of prompt) expect(el).not.toHaveTextContent(/Пока нет расчётов/);
   });
 
-  it("AC17: the form comes first in DOM order, then the result board, then the chart and the history", async () => {
+  it("TB-AC17: the form comes first in DOM order, then the result board, then the chart and the history", async () => {
     const { use } = await calculated();
     const form = screen.getByRole("button", { name: "Рассчитать" });
     const board = screen.getByRole("heading", { name: "Результат прогноза" });
@@ -400,7 +400,7 @@ describe("ForecastPage recommended price", () => {
       vi.restoreAllMocks();
     });
 
-    it("AC14: after «Подставить» nothing scrolls and focus stays on the button; a regular submit still scrolls", async () => {
+    it("TB-AC14: after «Подставить» nothing scrolls and focus stays on the button; a regular submit still scrolls", async () => {
       const { user, use } = await calculated();
       await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
 

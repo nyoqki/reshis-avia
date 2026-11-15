@@ -18,10 +18,15 @@ const PANEL: Record<"paper" | "board", string> = {
 
 const EDGE_PX = 8;
 
+/** A transparent 44 px square centred on the 24 px button, so a tap that lands near it still counts. */
+const HIT_AREA =
+  "after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2";
+
 /**
  * Round «?» button that discloses a short explanation of a term. The panel exists
- * only while open. Escape closes it and returns focus to the button; so does a
- * second click or a pointerdown outside.
+ * only while open. A second click or a pointerdown outside closes it; so does Escape,
+ * which returns focus to the button only when focus was inside the hint, so it never
+ * pulls focus out of a field the user has moved to. The 24 px button has a 44 px hit area.
  */
 export function TermHint({ term, children, surface = "paper" }: TermHintProps) {
   const [open, setOpen] = useState(false);
@@ -38,8 +43,9 @@ export function TermHint({ term, children, surface = "paper" }: TermHintProps) {
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      const inside = rootRef.current?.contains(document.activeElement) ?? false;
       setOpen(false);
-      buttonRef.current?.focus();
+      if (inside) buttonRef.current?.focus();
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -72,7 +78,7 @@ export function TermHint({ term, children, surface = "paper" }: TermHintProps) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`inline-flex size-6 items-center justify-center rounded-control border ${BUTTON[surface]}`}
+        className={`relative inline-flex size-6 items-center justify-center rounded-control border ${HIT_AREA} ${BUTTON[surface]}`}
       >
         <svg
           aria-hidden="true"

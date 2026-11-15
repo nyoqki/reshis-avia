@@ -23,7 +23,7 @@ function renderHeader(user: UserOut = ALICE, onLoggedOut = () => {}) {
 }
 
 describe("AppHeader theme control", () => {
-  it("AC17: choosing «Тёмная» pins data-theme=dark on the root and stores it; «Авто» removes the attribute", async () => {
+  it("TB-AC17: choosing «Тёмная» pins data-theme=dark on the root and stores it; «Авто» removes the attribute", async () => {
     const user = userEvent.setup();
     const banner = renderHeader();
 
@@ -36,7 +36,7 @@ describe("AppHeader theme control", () => {
     expect(getStoredTheme()).toBe("system");
   });
 
-  it("AC17: the initially checked radio follows the stored theme", () => {
+  it("TB-AC17: the initially checked radio follows the stored theme", () => {
     window.localStorage.setItem("rehis-theme", "light");
     const banner = renderHeader();
 
@@ -47,14 +47,14 @@ describe("AppHeader theme control", () => {
 });
 
 describe("AppHeader demo notice", () => {
-  it("AC1: a demo user sees the «демо» badge and the exact shared-demo notice inside the banner", () => {
+  it("TB-AC1: a demo user sees the «демо» badge and the exact shared-demo notice inside the banner", () => {
     const banner = renderHeader(DEMO);
 
     expect(within(banner).getByText("демо", { exact: true })).toBeInTheDocument();
     expect(within(banner).getByText(DEMO_NOTE)).toBeInTheDocument();
   });
 
-  it("AC1: a regular user sees neither the badge nor the notice", () => {
+  it("TB-AC1: a regular user sees neither the badge nor the notice", () => {
     const banner = renderHeader(ALICE);
 
     expect(within(banner).getByText("alice")).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe("AppHeader demo notice", () => {
 });
 
 describe("AppHeader logout", () => {
-  it("AC19: a failing logout shows the error as an alert in the banner and re-enables «Выйти»", async () => {
+  it("TB-AC19: a failing logout shows the error as an alert in the banner and re-enables «Выйти»", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -87,7 +87,7 @@ describe("AppHeader logout", () => {
     expect(onLoggedOut).not.toHaveBeenCalled();
   });
 
-  it("AC5: «Выйти» is disabled while the logout request is pending", async () => {
+  it("TB-AC5: «Выйти» is disabled while the logout request is pending", async () => {
     let release: (r: Response) => void = () => {};
     const fetchMock = vi.fn(
       () =>

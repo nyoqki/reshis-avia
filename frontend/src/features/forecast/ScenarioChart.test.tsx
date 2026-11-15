@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import pkgSource from "../../../package.json?raw";
@@ -68,7 +68,7 @@ afterEach(() => {
 });
 
 describe("ScenarioChart", () => {
-  it("AC12: renders one svg role img whose label mentions seats and median, the 10% caption and a 9-row scenario table", () => {
+  it("TB-AC12: renders one svg role img whose label mentions seats and median, the 10% caption and a 9-row scenario table", () => {
     const { container } = render(<ScenarioChart result={RESULT} />);
 
     const imgs = screen.getAllByRole("img");
@@ -89,7 +89,7 @@ describe("ScenarioChart", () => {
     expect(screen.queryByText(/спрос нулевой во всех девяти сценариях/i)).toBeNull();
   });
 
-  it("AC12: nine bars; bars at or above seats are hits, others below; index 4 is marked median", () => {
+  it("TB-AC12: nine bars; bars at or above seats are hits, others below; index 4 is marked median", () => {
     const { container } = render(<ScenarioChart result={RESULT} />);
     const all = bars(container);
     expect(all).toHaveLength(9);
@@ -101,7 +101,7 @@ describe("ScenarioChart", () => {
     expect(medians[0]).toBe(all[4]);
   });
 
-  it("AC12: the value axis shows ticks from 0 and the dashed seats line is labelled with the seat count", () => {
+  it("TB-AC12: the value axis shows ticks from 0 and the dashed seats line is labelled with the seat count", () => {
     const { container } = render(<ScenarioChart result={RESULT} />);
     const svg = screen.getByRole("img");
     const texts = Array.from(svg.querySelectorAll("text")).map((t) => (t.textContent ?? "").trim());
@@ -113,7 +113,7 @@ describe("ScenarioChart", () => {
     expect(dashed.length).toBeGreaterThan(0);
   });
 
-  it("AC12: focusing the first bar button shows the demand readout; ArrowRight moves to the next bar and End to the last", async () => {
+  it("TB-AC12: focusing the first bar button shows the demand readout; ArrowRight moves to the next bar and End to the last", async () => {
     const user = userEvent.setup();
     render(<ScenarioChart result={RESULT} />);
     const buttons = screen.getAllByRole("button", { name: /желают/ });
@@ -137,13 +137,13 @@ describe("ScenarioChart", () => {
     expect(buttons[0]).toHaveFocus();
   });
 
-  it("AC12: the bar buttons form a single tab stop", () => {
+  it("TB-AC12: the bar buttons form a single tab stop", () => {
     render(<ScenarioChart result={RESULT} />);
     const stops = screen.getAllByRole("button", { name: /желают/ }).filter((b) => b.tabIndex === 0);
     expect(stops).toHaveLength(1);
   });
 
-  it("AC12/AC10: for an all-negative scenario the readout shows the raw formula value and the empty overlay is visible", () => {
+  it("TB-AC12/AC10: for an all-negative scenario the readout shows the raw formula value and the empty overlay is visible", () => {
     render(<ScenarioChart result={EMPTY} />);
     expect(screen.getByText(/спрос нулевой во всех девяти сценариях/i)).toBeVisible();
     screen.getAllByRole("button", { name: /желают/ })[0].focus();
@@ -151,7 +151,7 @@ describe("ScenarioChart", () => {
     expect(screen.getByText(/Купят:\s*0/)).toBeVisible();
   });
 
-  it("AC12: the legend lists the encodings and the seat count", () => {
+  it("TB-AC12: the legend lists the encodings and the seat count", () => {
     render(<ScenarioChart result={RESULT} />);
     expect(screen.getByText(/Самолёт заполнен/)).toBeInTheDocument();
     expect(screen.getByText(/Ниже числа мест/)).toBeInTheDocument();
@@ -159,13 +159,13 @@ describe("ScenarioChart", () => {
     expect(screen.getByText(/Мест в самолёте:\s*900/)).toBeInTheDocument();
   });
 
-  it("AC12: the chart heading is level 2 with class text-lg", () => {
+  it("TB-AC12: the chart heading is level 2 with class text-lg", () => {
     render(<ScenarioChart result={RESULT} />);
     const heading = screen.getByRole("heading", { level: 2 });
     expect(heading).toHaveClass("text-lg");
   });
 
-  it("AC12/AC18: package.json no longer lists chart.js", () => {
+  it("TB-AC12/TB-AC18: package.json no longer lists chart.js", () => {
     const pkg = JSON.parse(pkgSource) as {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
@@ -174,7 +174,7 @@ describe("ScenarioChart", () => {
     expect(pkg.devDependencies ?? {}).not.toHaveProperty("chart.js");
   });
 
-  it("AC12/AC16: without IntersectionObserver the bars render at full height, nothing throws and the readout is not a live region", () => {
+  it("TB-AC12/TB-AC16: without IntersectionObserver the bars render at full height, nothing throws and the readout is not a live region", () => {
     vi.stubGlobal("IntersectionObserver", undefined);
     const { container } = render(<ScenarioChart result={RESULT} />);
     const all = bars(container);
@@ -186,5 +186,58 @@ describe("ScenarioChart", () => {
     const readout = screen.getByText(/Желают:\s*610/);
     expect(readout.closest("[role=status], [aria-live]")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("TB-AC12: the part of a bar above the seats line is hatched, from the bar top down to the line", () => {
+    const { container } = render(<ScenarioChart result={RESULT} />);
+    const pattern = container.querySelector("svg defs pattern");
+    expect(pattern).not.toBeNull();
+    const hatched = Array.from(container.querySelectorAll<SVGRectElement>("svg rect[fill]")).filter(
+      (r) => r.getAttribute("fill") === `url(#${pattern?.id})`,
+    );
+    // 970, 1060, 1150, 1260 and 1400 exceed 900 seats; 610…850 stay below the line
+    expect(hatched).toHaveLength(WANTS.filter((w) => w > 900).length);
+    const seatsLine = Array.from(container.querySelectorAll("svg line")).find((l) =>
+      l.getAttribute("stroke-dasharray"),
+    );
+    const seatsY = Number(seatsLine?.getAttribute("y1"));
+    const hits = bars(container).filter((_, i) => WANTS[i] > 900);
+    hatched.forEach((rect, i) => {
+      const bar = hits[i];
+      expect(rect.getAttribute("x")).toBe(bar.getAttribute("x"));
+      expect(rect.getAttribute("y")).toBe(bar.getAttribute("y"));
+      const top = Number(rect.getAttribute("y"));
+      expect(Number(rect.getAttribute("height"))).toBeCloseTo(seatsY - top, 6);
+      expect(Number(rect.getAttribute("height"))).toBeGreaterThan(0);
+    });
+  });
+
+  it("TB-AC12/TB-AC16: with IntersectionObserver the bars wait hidden, then grow once the chart scrolls into view", () => {
+    const callbacks: Array<(entries: Partial<IntersectionObserverEntry>[]) => void> = [];
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(cb: (entries: Partial<IntersectionObserverEntry>[]) => void) {
+          callbacks.push(cb);
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+        takeRecords() {
+          return [];
+        }
+      },
+    );
+    const { container } = render(<ScenarioChart result={RESULT} />);
+    const group = container.querySelector(".chart-bars");
+    expect(group).toHaveAttribute("data-grow", "pending");
+    act(() => {
+      for (const cb of callbacks) cb([{ isIntersecting: false }]);
+    });
+    expect(group).toHaveAttribute("data-grow", "pending");
+    act(() => {
+      for (const cb of callbacks) cb([{ isIntersecting: true }]);
+    });
+    expect(group).toHaveAttribute("data-grow", "run");
   });
 });

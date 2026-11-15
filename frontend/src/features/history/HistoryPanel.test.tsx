@@ -132,7 +132,7 @@ describe("HistoryPanel", () => {
     expect((await screen.findAllByText(/Казань/))[0]).toBeVisible();
     expect(api.history).toHaveBeenCalledTimes(2);
   });
-  it("AC13: after a refresh with a new item, its row and list item are fresh and the older ones are not; the first load marks none", async () => {
+  it("TB-AC13: after a refresh with a new item, its row and list item are fresh and the older ones are not; the first load marks none", async () => {
     vi.mocked(api.history).mockResolvedValueOnce({ items: [OLDER] });
     vi.mocked(api.history).mockResolvedValueOnce({ items: [NEWER, OLDER] });
     const { container, rerender } = render(
@@ -155,7 +155,7 @@ describe("HistoryPanel", () => {
     for (const el of fresh) expect(el.textContent).not.toContain("Сочи");
   });
 
-  it("AC13: the empty state shows blank flap cells hidden from assistive tech next to the empty text", async () => {
+  it("TB-AC13: the empty state shows blank flap cells hidden from assistive tech next to the empty text", async () => {
     vi.mocked(api.history).mockResolvedValue({ items: [] });
     const { container } = render(
       <HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />,

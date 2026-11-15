@@ -18,7 +18,7 @@ describe("findDesignViolations", () => {
     ["default-scale", '<div className="rounded-lg" />'],
     ["default-scale", '<div className="shadow-md" />'],
     ["default-scale", '<div className="bg-white" />'],
-  ] as const)("AC2: flags %s in %s", (rule, source) => {
+  ] as const)("TB-AC2: flags %s in %s", (rule, source) => {
     const found = findDesignViolations("src/x.tsx", source);
     expect(found.length).toBeGreaterThan(0);
     expect(found.map((v) => v.rule)).toContain(rule);
@@ -35,7 +35,7 @@ describe("findDesignViolations", () => {
     '<div className="text-flap-sm" />',
     '<div className="bg-[var(--color-board)]" />',
     '<svg className="fill-sign" />',
-  ])("AC2: accepts %s", (source) => {
+  ])("TB-AC2: accepts %s", (source) => {
     expect(rules(source)).toEqual([]);
   });
 });
@@ -51,7 +51,7 @@ function globToRegExp(pattern: string): RegExp {
 }
 
 describe("project sources", () => {
-  it("AC2: every src file outside the exclusions and legacy list has no violation", () => {
+  it("TB-AC2: every src file outside the exclusions and legacy list has no violation", () => {
     const files = import.meta.glob("../**/*.{ts,tsx,css}", {
       query: "?raw",
       import: "default",

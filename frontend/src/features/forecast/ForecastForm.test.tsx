@@ -120,7 +120,7 @@ describe("ForecastForm", () => {
     expect(screen.getByLabelText(/^Цена билета/)).toHaveAccessibleDescription(text);
   });
 
-  it("AC19: a price outside the route range turns the hint into a warning next to the field", async () => {
+  it("AC10/TB-AC19: a price outside the route range turns the hint into a warning next to the field", async () => {
     // The API accepts such a price (spec: a warning, not an error), so the input is not marked invalid.
     const user = userEvent.setup();
     render(<Harness />);

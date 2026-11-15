@@ -44,15 +44,17 @@ export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element
   const gateY = cabinHeight + 3;
   const labelX = queue.shown * (Math.min(layout.unit, 12) + layout.gap) + 4;
 
+  // min-w-0: as a grid item the figure has to shrink below the svg it last drew, or a narrower
+  // board is never measured and the map overflows it.
   return (
-    <figure ref={ref} className="m-0">
+    <figure ref={ref} className="m-0 min-w-0">
       <svg
         aria-hidden="true"
         focusable="false"
         width={layout.width}
         height={layout.height}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
-        className={reduced ? undefined : "seatmap-anim"}
+        className={reduced ? "block max-w-full" : "seatmap-anim block max-w-full"}
       >
         <path className="seatmap-filled fill-sign" d={layout.filledPath} />
         <path className="fill-none stroke-board-ink-2" strokeWidth={1} d={layout.freePath} />

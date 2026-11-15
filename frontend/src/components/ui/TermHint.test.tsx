@@ -14,7 +14,7 @@ function setup() {
 }
 
 describe("TermHint", () => {
-  it("AC15: the trigger is a button with empty text content and aria-expanded=false", () => {
+  it("TB-AC15: the trigger is a button with empty text content and aria-expanded=false", () => {
     const trigger = setup();
     expect(trigger).toHaveAttribute("type", "button");
     expect(trigger).toHaveTextContent("");
@@ -22,7 +22,7 @@ describe("TermHint", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("AC15: click opens the explanation and aria-controls points at it", async () => {
+  it("TB-AC15: click opens the explanation and aria-controls points at it", async () => {
     const user = userEvent.setup();
     const trigger = setup();
     await user.click(trigger);
@@ -34,7 +34,7 @@ describe("TermHint", () => {
     expect(panel.closest(`[id="${controlled}"]`)).not.toBeNull();
   });
 
-  it("AC15: a second click closes the panel", async () => {
+  it("TB-AC15: a second click closes the panel", async () => {
     const user = userEvent.setup();
     const trigger = setup();
     await user.click(trigger);
@@ -43,7 +43,7 @@ describe("TermHint", () => {
     expect(screen.queryByText("Столько мест реально купят.")).not.toBeInTheDocument();
   });
 
-  it("AC15: Escape closes the panel and focus returns to the trigger", async () => {
+  it("TB-AC15: Escape closes the panel and focus returns to the trigger", async () => {
     const user = userEvent.setup();
     const trigger = setup();
     await user.click(trigger);
@@ -53,7 +53,7 @@ describe("TermHint", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("AC15: a pointerdown outside closes the panel; the panel is absent from the DOM while closed", async () => {
+  it("TB-AC15: a pointerdown outside closes the panel; the panel is absent from the DOM while closed", async () => {
     const user = userEvent.setup();
     const trigger = setup();
     expect(screen.queryByText("Столько мест реально купят.")).not.toBeInTheDocument();
@@ -64,7 +64,7 @@ describe("TermHint", () => {
     expect(screen.queryByText("Столько мест реально купят.")).not.toBeInTheDocument();
   });
 
-  it("AC15: keyboard Enter on the focused trigger opens it", async () => {
+  it("TB-AC15: keyboard Enter on the focused trigger opens it", async () => {
     const user = userEvent.setup();
     const trigger = setup();
     await user.tab();
@@ -72,5 +72,27 @@ describe("TermHint", () => {
     await user.keyboard("{Enter}");
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("Столько мест реально купят.")).toBeVisible();
+  });
+
+  it("TB-AC15: Escape after Tab moved focus elsewhere closes the panel and leaves focus where it is", async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <TermHint term="Купят">Столько мест реально купят.</TermHint>
+        <input aria-label="Цена" />
+      </div>,
+    );
+    const trigger = screen.getByRole("button", { name: "Что значит «Купят»" });
+    await user.click(trigger);
+    const input = screen.getByRole("textbox", { name: "Цена" });
+    input.focus();
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(input).toHaveFocus();
+  });
+
+  it("TB-AC17: the 24 px trigger carries a 44 px hit area", () => {
+    const trigger = setup();
+    expect(trigger).toHaveClass("size-6", "relative", "after:absolute", "after:size-11");
   });
 });

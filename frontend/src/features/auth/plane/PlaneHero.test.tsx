@@ -53,6 +53,42 @@ function setMedia(opts: { reduced?: boolean; wide?: boolean }) {
   }));
 }
 
+/** matchMedia whose width query can be flipped later, notifying its change listeners. */
+function setResizableMedia(initialWide: boolean): (wide: boolean) => void {
+  let wide = initialWide;
+  const listeners = new Set<() => void>();
+  vi.stubGlobal("matchMedia", (query: string) => {
+    const isWidth = !query.includes("prefers-reduced-motion");
+    return {
+      get matches() {
+        return isWidth ? wide : false;
+      },
+      media: query,
+      onchange: null,
+      addEventListener: (_type: string, fn: () => void) => {
+        if (isWidth) listeners.add(fn);
+      },
+      removeEventListener: (_type: string, fn: () => void) => {
+        listeners.delete(fn);
+      },
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    };
+  });
+  return (next: boolean) => {
+    wide = next;
+    act(() => {
+      for (const fn of [...listeners]) fn();
+    });
+  };
+}
+
+function stillShown(img: HTMLImageElement | null): boolean {
+  if (!img) return false;
+  return !/(^|\s)opacity-0(\s|$)/.test(img.className) && !img.hidden;
+}
+
 function intersect(isIntersecting: boolean) {
   for (const o of observers) o.callback([{ isIntersecting }]);
 }
@@ -93,7 +129,7 @@ afterEach(() => {
 });
 
 describe("PlaneHero", () => {
-  it("AC9: the first render shows the still image with width and height inside the fixed-ratio box and no canvas-driven layout change", () => {
+  it("TB-AC9: the first render shows the still image with width and height inside the fixed-ratio box and no canvas-driven layout change", () => {
     const { container } = render(<PlaneHero className="x" />);
     const img = container.querySelector("img");
     expect(img).not.toBeNull();
@@ -107,7 +143,7 @@ describe("PlaneHero", () => {
     expect(canvasShown(container.querySelector("canvas"))).toBe(false);
   });
 
-  it("AC9/AC16: under reduced motion the scene module is never imported", async () => {
+  it("TB-AC9/TB-AC16: under reduced motion the scene module is never imported", async () => {
     setMedia({ reduced: true });
     render(<PlaneHero />);
     intersect(true);
@@ -116,7 +152,7 @@ describe("PlaneHero", () => {
     expect(mountPlaneScene).not.toHaveBeenCalled();
   });
 
-  it("AC9: without WebGL the scene module is never imported", async () => {
+  it("TB-AC9: without WebGL the scene module is never imported", async () => {
     vi.mocked(webglAvailable).mockReturnValue(false);
     const { container } = render(<PlaneHero />);
     intersect(true);
@@ -126,7 +162,7 @@ describe("PlaneHero", () => {
     expect(container.querySelector("img")).not.toBeNull();
   });
 
-  it("AC9: the scene is imported and started with maxDpr 2 only after the IntersectionObserver reports intersecting", async () => {
+  it("TB-AC9: the scene is imported and started with maxDpr 2 only after the IntersectionObserver reports intersecting", async () => {
     render(<PlaneHero />);
     await flush();
     expect(sceneLoaded).not.toHaveBeenCalled();
@@ -141,7 +177,7 @@ describe("PlaneHero", () => {
     expect(handle.start).toHaveBeenCalled();
   });
 
-  it("AC9: the still stays until onFirstFrame fires, then the canvas is marked visible", async () => {
+  it("TB-AC9: the still stays until onFirstFrame fires, then the canvas is marked visible", async () => {
     const { container } = render(<PlaneHero />);
     intersect(true);
     await flush();
@@ -154,7 +190,7 @@ describe("PlaneHero", () => {
     expect(container.querySelector("img")).not.toBeNull();
   });
 
-  it("AC9: leaving the viewport and a hidden tab stop the loop; coming back starts it", async () => {
+  it("TB-AC9: leaving the viewport and a hidden tab stop the loop; coming back starts it", async () => {
     render(<PlaneHero />);
     intersect(true);
     await flush();
@@ -175,7 +211,7 @@ describe("PlaneHero", () => {
     expect(handle.start).toHaveBeenCalled();
   });
 
-  it("AC9: unmount disposes the scene; a failing mount keeps the still image", async () => {
+  it("TB-AC9: unmount disposes the scene; a failing mount keeps the still image", async () => {
     const first = render(<PlaneHero />);
     intersect(true);
     await flush();
@@ -193,7 +229,7 @@ describe("PlaneHero", () => {
     expect(canvasShown(second.container.querySelector("canvas"))).toBe(false);
   });
 
-  it("AC9: unmounting before the import resolves means mountPlaneScene is never called", async () => {
+  it("TB-AC9: unmounting before the import resolves means mountPlaneScene is never called", async () => {
     const { unmount } = render(<PlaneHero />);
     intersect(true);
     unmount();
@@ -201,7 +237,7 @@ describe("PlaneHero", () => {
     expect(mountPlaneScene).not.toHaveBeenCalled();
   });
 
-  it("AC9: two intersecting callbacks before the import resolves import and mount the scene once", async () => {
+  it("TB-AC9: two intersecting callbacks before the import resolves import and mount the scene once", async () => {
     render(<PlaneHero />);
     intersect(true);
     intersect(true);
@@ -209,5 +245,43 @@ describe("PlaneHero", () => {
     intersect(true);
     await flush();
     expect(mountPlaneScene).toHaveBeenCalledTimes(1);
+  });
+
+  it("TB-AC9: the still fades out once the scene has drawn its first frame", async () => {
+    const { container } = render(<PlaneHero />);
+    const img = container.querySelector("img");
+    expect(stillShown(img)).toBe(true);
+    intersect(true);
+    await flush();
+    expect(stillShown(img)).toBe(true);
+    act(() => {
+      mountPlaneScene.mock.calls[0][1].onFirstFrame();
+    });
+    expect(canvasShown(container.querySelector("canvas"))).toBe(true);
+    expect(stillShown(img)).toBe(false);
+  });
+
+  it("TB-AC9: widening past 768 px after mount loads the scene; narrowing again disposes it and brings the still back", async () => {
+    const resize = setResizableMedia(false);
+    const { container } = render(<PlaneHero />);
+    intersect(true);
+    await flush();
+    expect(sceneLoaded).not.toHaveBeenCalled();
+    expect(mountPlaneScene).not.toHaveBeenCalled();
+
+    resize(true);
+    intersect(true);
+    await flush();
+    expect(mountPlaneScene).toHaveBeenCalledTimes(1);
+    act(() => {
+      mountPlaneScene.mock.calls[0][1].onFirstFrame();
+    });
+    const img = container.querySelector("img");
+    expect(stillShown(img)).toBe(false);
+
+    resize(false);
+    expect(handle.dispose).toHaveBeenCalledTimes(1);
+    expect(stillShown(img)).toBe(true);
+    expect(canvasShown(container.querySelector("canvas"))).toBe(false);
   });
 });

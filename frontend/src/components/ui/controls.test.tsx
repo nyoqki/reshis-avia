@@ -8,7 +8,7 @@ import { SegmentedControl } from "./SegmentedControl";
 import { Tabs } from "./Tabs";
 
 describe("Field", () => {
-  it("AC5: links the hint to the control through aria-describedby and the label through htmlFor", () => {
+  it("TB-AC5: links the hint to the control through aria-describedby and the label through htmlFor", () => {
     render(
       <Field id="price" label="Цена" hint="В рублях за штуку">
         {(control) => <Input {...control} />}
@@ -22,7 +22,7 @@ describe("Field", () => {
     expect(screen.getByText("Цена")).toHaveAttribute("for", "price");
   });
 
-  it("AC19: a warning has class text-warning, joins aria-describedby after the hint and does not set aria-invalid", () => {
+  it("TB-AC19: a warning has class text-warning, joins aria-describedby after the hint and does not set aria-invalid", () => {
     render(
       <Field id="price" label="Цена" hint="Подсказка" warning="Цена выше обычной">
         {(control) => <Input {...control} />}
@@ -36,7 +36,7 @@ describe("Field", () => {
     expect(input).not.toHaveAttribute("aria-invalid");
   });
 
-  it("AC19: an error sets aria-invalid, joins aria-describedby, and its paragraph's parent contains the control", () => {
+  it("TB-AC19: an error sets aria-invalid, joins aria-describedby, and its paragraph's parent contains the control", () => {
     render(
       <Field id="price" label="Цена" hint="Подсказка" warning="Осторожно" error="Введите число">
         {(control) => <Input {...control} />}
@@ -59,7 +59,7 @@ const OPTIONS = [
 ] as const;
 
 describe("SegmentedControl", () => {
-  it("AC17: renders radios named by their labels inside a group named by the legend; the checked radio follows value", () => {
+  it("TB-AC17: renders radios named by their labels inside a group named by the legend; the checked radio follows value", () => {
     render(
       <SegmentedControl
         name="theme"
@@ -76,7 +76,7 @@ describe("SegmentedControl", () => {
     expect(screen.getByRole("radio", { name: "Светлая" })).not.toBeChecked();
   });
 
-  it("AC17: clicking another radio calls onChange with its value; a compact control keeps the accessible names", async () => {
+  it("TB-AC17: clicking another radio calls onChange with its value; a compact control keeps the accessible names", async () => {
     const onChange = vi.fn();
     render(
       <SegmentedControl
@@ -93,7 +93,7 @@ describe("SegmentedControl", () => {
     expect(onChange).toHaveBeenCalledWith("dark");
   });
 
-  it("AC3/AC17: each segment label wraps its radio and carries the focus-visible ring hook", () => {
+  it("TB-AC3/TB-AC17: each segment label wraps its radio and carries the focus-visible ring hook", () => {
     render(
       <SegmentedControl
         name="theme"
@@ -107,6 +107,23 @@ describe("SegmentedControl", () => {
       const label = radio.closest("label");
       expect(label).not.toBeNull();
       expect(label?.className).toMatch(/(has-focus-visible|peer-focus-visible):outline-2/);
+    }
+  });
+
+  it("TB-AC5: unchecked segments have a pressed style; the end segments round with the frame", () => {
+    render(
+      <SegmentedControl
+        name="theme"
+        legend="Тема"
+        value="light"
+        options={[...OPTIONS]}
+        onChange={() => {}}
+      />,
+    );
+    const labels = screen.getAllByRole("radio").map((radio) => radio.closest("label"));
+    for (const label of labels) {
+      expect(label).toHaveClass("first:rounded-l-control", "last:rounded-r-control");
+      if (!label?.querySelector("input")?.checked) expect(label).toHaveClass("active:bg-line");
     }
   });
 });
@@ -131,7 +148,7 @@ function TabsHarness() {
 }
 
 describe("Tabs", () => {
-  it("AC5: marks the active tab aria-selected and labels the panel with it", () => {
+  it("TB-AC5: marks the active tab aria-selected and labels the panel with it", () => {
     render(<TabsHarness />);
     const first = screen.getByRole("tab", { name: "Первая" });
     expect(first).toHaveAttribute("aria-selected", "true");
@@ -143,7 +160,12 @@ describe("Tabs", () => {
     expect(screen.getByRole("tabpanel", { name: "Первая" })).toHaveAttribute("id", "t-panel");
   });
 
-  it("AC5: ArrowRight from the first tab focuses and activates the second; End and Home jump to the ends", async () => {
+  it("TB-AC5: an unselected tab has a pressed style", () => {
+    render(<TabsHarness />);
+    expect(screen.getByRole("tab", { name: "Вторая" })).toHaveClass("active:bg-line");
+  });
+
+  it("TB-AC5: ArrowRight from the first tab focuses and activates the second; End and Home jump to the ends", async () => {
     render(<TabsHarness />);
     screen.getByRole("tab", { name: "Первая" }).focus();
     await userEvent.keyboard("{ArrowRight}");

@@ -19,7 +19,7 @@ const files = import.meta.glob("../**/*.{ts,tsx,css}", {
 }) as Record<string, string>;
 
 describe("design system", () => {
-  it("AC2: no file in src outside DESIGN_SCAN_EXCLUDE has a design violation of any rule", () => {
+  it("TB-AC2: no file in src outside DESIGN_SCAN_EXCLUDE has a design violation of any rule", () => {
     const skip = DESIGN_SCAN_EXCLUDE.map(globToRegExp);
     const scanned = Object.entries(files)
       .map(([key, source]) => [key.replace(/^\.\.\//, ""), source] as const)
@@ -31,7 +31,7 @@ describe("design system", () => {
     expect(violations).toEqual([]);
   });
 
-  it("AC2: the legacy variables and classes are absent from index.css", () => {
+  it("TB-AC2: the legacy variables and classes are absent from index.css", () => {
     const legacyVars = [
       "--bg",
       "--surface",
@@ -56,7 +56,7 @@ describe("design system", () => {
     }
   });
 
-  it("AC2: index.css @theme static starts with the namespace resets", () => {
+  it("TB-AC2: index.css @theme static starts with the namespace resets", () => {
     const m = indexCss.match(/@theme\s+static\s*\{([\s\S]*?)\n\}/);
     expect(m).not.toBeNull();
     const decls = (m?.[1] ?? "")

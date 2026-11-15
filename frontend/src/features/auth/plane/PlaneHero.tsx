@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import still from "../../../assets/plane-still.webp";
 import { useReducedMotion } from "../../../lib/motion";
@@ -15,26 +15,45 @@ export interface PlaneHeroProps {
   className?: string;
 }
 
+function wideQuery(): MediaQueryList | null {
+  return typeof window.matchMedia === "function" ? window.matchMedia(WIDE_QUERY) : null;
+}
+
 function wideEnough(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia(WIDE_QUERY).matches;
+  return wideQuery()?.matches ?? false;
+}
+
+function subscribeWide(onChange: () => void): () => void {
+  const mql = wideQuery();
+  if (!mql) return () => {};
+  if (typeof mql.addEventListener === "function") {
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }
+  mql.addListener(onChange);
+  return () => mql.removeListener(onChange);
 }
 
 /**
  * The 3D airliner over its still image. The still is always rendered; the three.js chunk is
  * imported only when WebGL works, motion is allowed, the screen is wide and the box is in view,
- * and the canvas fades in over the still once the scene has drawn its first frame.
+ * and the canvas fades in over the still once the scene has drawn its first frame. The still fades
+ * out only after the canvas is fully in, so no frame is blank, and comes back at once whenever the
+ * scene is torn down. Crossing the 768 px breakpoint starts or
+ * stops the scene.
  */
 export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reducedMotion = useReducedMotion();
+  const wide = useSyncExternalStore(subscribeWide, wideEnough, () => false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const box = boxRef.current;
     const canvas = canvasRef.current;
     if (!box || !canvas || reducedMotion) return;
-    if (typeof IntersectionObserver === "undefined" || !wideEnough() || !webglAvailable()) return;
+    if (typeof IntersectionObserver === "undefined" || !wide || !webglAvailable()) return;
 
     // Effect-scoped guards: `alive` turns false on cleanup, `loading` makes the import single-flight.
     let alive = true;
@@ -102,8 +121,10 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
       document.removeEventListener("visibilitychange", sync);
       handle?.dispose();
       handle = null;
+      // Back to the still until a new scene draws its first frame.
+      setReady(false);
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, wide]);
 
   return (
     <div ref={boxRef} className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}>
@@ -113,7 +134,8 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
         width={STILL_WIDTH}
         height={STILL_HEIGHT}
         decoding="async"
-        className="absolute inset-0 h-full w-full object-contain"
+        data-visible={ready ? "false" : "true"}
+        className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-[var(--duration-grow)] ease-[var(--ease-out)] ${ready ? "opacity-0 delay-[var(--duration-grow)]" : "opacity-100"}`}
       />
       {reducedMotion ? null : (
         <canvas

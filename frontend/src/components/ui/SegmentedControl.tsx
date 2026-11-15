@@ -41,10 +41,13 @@ export function SegmentedControl<T extends string>({
               key={option.value}
               className={[
                 "relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 px-3 py-2 text-base",
+                // the end segments follow the frame's corners, so a checked fill never pokes past them;
+                // no overflow-hidden on the frame, it would clip the focus ring
+                "first:rounded-l-control last:rounded-r-control",
                 "has-focus-visible:outline-2 has-focus-visible:outline-focus has-focus-visible:outline-offset-2",
                 checked
                   ? "bg-paper-sunken font-medium text-ink border-b-4 border-b-ink"
-                  : "text-ink-2 hover:bg-paper-sunken",
+                  : "text-ink-2 hover:bg-paper-sunken active:bg-line",
               ].join(" ")}
             >
               <input

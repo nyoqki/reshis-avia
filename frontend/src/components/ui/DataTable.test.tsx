@@ -19,7 +19,7 @@ const columns: DataTableColumn<Row>[] = [
 ];
 
 describe("DataTable", () => {
-  it("AC5: renders columnheaders from columns and one row per item in order", () => {
+  it("TB-AC5: renders columnheaders from columns and one row per item in order", () => {
     render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.id} caption="Рейсы" />);
     const headers = screen.getAllByRole("columnheader");
     expect(headers.map((h) => h.textContent)).toEqual(["Рейс", "Цена"]);
@@ -32,7 +32,7 @@ describe("DataTable", () => {
     expect(within(body[1]).getByText("Рейс Б")).toBeInTheDocument();
   });
 
-  it("AC5: a rowHeader column renders a rowheader cell", () => {
+  it("TB-AC5: a rowHeader column renders a rowheader cell", () => {
     render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.id} />);
     const rowHeaders = screen.getAllByRole("rowheader");
     expect(rowHeaders.map((h) => h.textContent)).toEqual(["Рейс А", "Рейс Б"]);
@@ -41,7 +41,7 @@ describe("DataTable", () => {
     }
   });
 
-  it("AC5: rowProps data attributes reach the tr; numeric cells carry font-mono", () => {
+  it("TB-AC5: rowProps data attributes reach the tr; numeric cells carry font-mono", () => {
     render(
       <DataTable
         columns={columns}

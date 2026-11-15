@@ -159,7 +159,7 @@ describe("ResultPanel", () => {
     expect(onUse).toHaveBeenCalledWith(9500);
   });
 
-  it("AC10: the board header shows the flight line, the date and the price", () => {
+  it("TB-AC10: the board header shows the flight line, the date and the price", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     const heading = screen.getByRole("heading", { level: 2, name: "Результат прогноза" });
     const header = heading.parentElement as HTMLElement;
@@ -168,7 +168,7 @@ describe("ResultPanel", () => {
     expect(header.textContent).toMatch(/9\s000\s₽/);
   });
 
-  it("AC10: the status line reads «Есть места», «Мест нет» or «Нет спроса»", () => {
+  it("TB-AC10: the status line reads «Есть места», «Мест нет» or «Нет спроса»", () => {
     const none: ForecastResponse = { ...CONTROL, limit: "none", buys: 800, free_seats: 100 };
     const { unmount } = render(<ResultPanel result={SEATS} onUseRecommended={() => {}} />);
     expect(screen.getByText("Мест нет")).toBeInTheDocument();
@@ -180,7 +180,7 @@ describe("ResultPanel", () => {
     expect(screen.getByText("Нет спроса")).toBeInTheDocument();
   });
 
-  it("AC10: each card's flap layer is aria-hidden and the card text is only label plus final value", () => {
+  it("TB-AC10: each card's flap layer is aria-hidden and the card text is only label plus final value", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     const expected: Record<string, string> = {
       "Мест в самолёте": "900",
@@ -198,7 +198,7 @@ describe("ResultPanel", () => {
     }
   });
 
-  it("AC14: while pending, «Подставить» is aria-disabled and a click does nothing", async () => {
+  it("TB-AC14: while pending, «Подставить» is aria-disabled and a click does nothing", async () => {
     const onUse = vi.fn();
     const user = userEvent.setup();
     render(<ResultPanel result={CONTROL} onUseRecommended={onUse} pending />);
@@ -209,7 +209,7 @@ describe("ResultPanel", () => {
     expect(onUse).not.toHaveBeenCalled();
   });
 
-  it("AC14: without pending «Подставить» is not aria-disabled", () => {
+  it("TB-AC14: without pending «Подставить» is not aria-disabled", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     expect(screen.getByRole("button", { name: "Подставить" })).not.toHaveAttribute(
       "aria-disabled",
@@ -217,7 +217,7 @@ describe("ResultPanel", () => {
     );
   });
 
-  it("AC15: term hint buttons exist for every figure, the risky one only for a risky flight", () => {
+  it("TB-AC15: term hint buttons exist for every figure, the risky one only for a risky flight", () => {
     const { rerender } = render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     for (const term of [
       "Желают купить",
@@ -240,7 +240,7 @@ describe("ResultPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("AC11: the seat map caption is present", () => {
+  it("TB-AC11: the seat map caption is present", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     expect(screen.getByText(/Занято\s+900\s+из\s+900\s+мест/)).toBeInTheDocument();
   });

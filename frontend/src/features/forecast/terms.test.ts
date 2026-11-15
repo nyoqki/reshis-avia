@@ -12,7 +12,7 @@ const NAMES: Record<TermKey, string> = {
 };
 
 describe("TERMS", () => {
-  it("AC15: has the seven keys with the exact term names", () => {
+  it("TB-AC15: has the seven keys with the exact term names", () => {
     expect(Object.keys(TERMS).sort()).toEqual(Object.keys(NAMES).sort());
     for (const key of Object.keys(NAMES) as TermKey[]) {
       expect(TERMS[key].term).toBe(NAMES[key]);
@@ -20,17 +20,27 @@ describe("TERMS", () => {
     }
   });
 
-  it("AC15: the risky text names the 15 % threshold", () => {
+  it("TB-AC15: the wants text names the median scenario's base demand, as the README formula does", () => {
+    // README: желают = 0.5_base_demand − price_sensitivity × (цена − base_price); 0.5 is the quantile.
+    expect(TERMS.wants.text).toContain("базовый спрос медианного сценария (0.5_base_demand)");
+    expect(TERMS.wants.text).not.toMatch(/половин/);
+  });
+
+  it("TB-AC15: the sellout text says what replaces 0 % and 100 % in a full sentence", () => {
+    expect(TERMS.sellout.text).toContain("Вместо 0 % и 100 % пишем «< 10 %» и «> 90 %»");
+  });
+
+  it("TB-AC15: the risky text names the 15 % threshold", () => {
     expect(TERMS.risky.text).toContain("15 %");
   });
 
-  it("AC15: the sellout text names «< 10 %» and «> 90 %» and the nine scenarios", () => {
+  it("TB-AC15: the sellout text names «< 10 %» and «> 90 %» and the nine scenarios", () => {
     expect(TERMS.sellout.text).toContain("< 10 %");
     expect(TERMS.sellout.text).toContain("> 90 %");
     expect(TERMS.sellout.text).toMatch(/девят/);
   });
 
-  it("AC15: the scenarios text names 10 %, 50 % (медиана) and 90 %", () => {
+  it("TB-AC15: the scenarios text names 10 %, 50 % (медиана) and 90 %", () => {
     const text = TERMS.scenarios.text;
     expect(text).toContain("10 %");
     expect(text).toContain("50 %");
@@ -38,7 +48,7 @@ describe("TERMS", () => {
     expect(text).toMatch(/50 %[^.]*медиан/);
   });
 
-  it("AC20: every text uses NBSP before %, «ёлочки» for quotes and no ASCII hyphen between numbers", () => {
+  it("TB-AC20: every text uses NBSP before %, «ёлочки» for quotes and no ASCII hyphen between numbers", () => {
     for (const { term, text } of Object.values(TERMS)) {
       for (const s of [term, text]) {
         expect(s).not.toMatch(/\d %/);

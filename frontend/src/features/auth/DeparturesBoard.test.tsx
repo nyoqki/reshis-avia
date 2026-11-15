@@ -35,7 +35,7 @@ const dataRows = () => screen.getAllByRole("row").slice(1);
 const nbsp = (s: string) => s.replace(/\s/g, " ");
 
 describe("DeparturesBoard", () => {
-  it("AC8: the board shows five data rows with city, code and price in CSV order and the period", () => {
+  it("TB-AC8: the board shows five data rows with city, code and price in CSV order and the period", () => {
     render(<DeparturesBoard />);
     const rows = dataRows();
     expect(rows).toHaveLength(5);
@@ -54,14 +54,14 @@ describe("DeparturesBoard", () => {
     expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
   });
 
-  it("AC8: the column headers are Куда, Код, Базовая цена, ₽ and there are no flight-number, time or status columns", () => {
+  it("TB-AC8: the column headers are Куда, Код, Базовая цена, ₽ and there are no flight-number, time or status columns", () => {
     render(<DeparturesBoard />);
     const heads = screen.getAllByRole("columnheader").map((h) => h.textContent);
     expect(heads).toEqual(["Куда", "Код", "Базовая цена, ₽"]);
     expect(screen.queryByText(/рейс|время|статус|вылет/i, { selector: "th" })).toBeNull();
   });
 
-  it("AC8/AC10: each cell's text content is the final value while the flap layer is aria-hidden", () => {
+  it("TB-AC8/TB-AC10: each cell's text content is the final value while the flap layer is aria-hidden", () => {
     const { container } = render(<DeparturesBoard />);
     // mid-animation: text content must already be final
     expect(dataRows()[0].textContent).toContain("AER");
@@ -78,7 +78,7 @@ describe("DeparturesBoard", () => {
     }
   });
 
-  it("AC16: under reduced motion no timer is scheduled and cells show final characters", () => {
+  it("TB-AC16: under reduced motion no timer is scheduled and cells show final characters", () => {
     mockReduced(true);
     const spy = vi.spyOn(globalThis, "setTimeout");
     const { container } = render(<DeparturesBoard />);
@@ -94,7 +94,7 @@ describe("DeparturesBoard", () => {
     spy.mockRestore();
   });
 
-  it("AC17: city cells contain no flap cells and the code and price cells use the 'fit' flap size", () => {
+  it("TB-AC17: city cells contain no flap cells and the code and price cells use the 'fit' flap size", () => {
     render(<DeparturesBoard />);
     for (const row of dataRows()) {
       expect(row.querySelector("th[scope=row] [data-char]")).toBeNull();

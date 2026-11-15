@@ -271,7 +271,7 @@ describe("AppHeader logout", () => {
 });
 
 describe("AuthScreen layout", () => {
-  it("AC8: exactly one departures board with five routes is on the login screen", async () => {
+  it("TB-AC8: exactly one departures board with five routes is on the login screen", async () => {
     stubFetch(OPEN);
     render(<AuthScreen onAuthenticated={() => {}} />);
     await screen.findByLabelText(/^Имя/);
@@ -283,7 +283,7 @@ describe("AuthScreen layout", () => {
     expect(screen.getAllByText("Прогноз на 01.06–01.07.2026")).toHaveLength(1);
   });
 
-  it("AC9: exactly one plane still image is present and no canvas is shown in jsdom", async () => {
+  it("TB-AC9: exactly one plane still image is present and no canvas is shown in jsdom", async () => {
     stubFetch(OPEN);
     const { container } = render(<AuthScreen onAuthenticated={() => {}} />);
     await screen.findByLabelText(/^Имя/);
@@ -294,7 +294,7 @@ describe("AuthScreen layout", () => {
     for (const c of canvases) expect(c.dataset.visible).not.toBe("true");
   });
 
-  it("AC1: the h1 names the product and precedes the auth card in DOM order", async () => {
+  it("TB-AC1: the h1 names the product and precedes the auth card in DOM order", async () => {
     stubFetch(OPEN);
     render(<AuthScreen onAuthenticated={() => {}} />);
     const heading = await screen.findByRole("heading", { level: 1 });
@@ -307,7 +307,7 @@ describe("AuthScreen layout", () => {
     expect(username.compareDocumentPosition(board) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("AC5: ArrowRight on the «Вход» tab activates «Регистрация» and shows the rules hint", async () => {
+  it("TB-AC5: ArrowRight on the «Вход» tab activates «Регистрация» and shows the rules hint", async () => {
     stubFetch(OPEN);
     const user = userEvent.setup();
     render(<AuthScreen onAuthenticated={() => {}} />);
@@ -327,7 +327,17 @@ describe("AuthScreen layout", () => {
     ).toBeVisible();
   });
 
-  it("AC5: the session-expired notice has status semantics", async () => {
+  it("TB-AC8: the subtitle names the fixed Moscow routes and promises no routes of the user's own", async () => {
+    stubFetch(OPEN);
+    render(<AuthScreen onAuthenticated={() => {}} />);
+    await screen.findByLabelText(/^Имя/);
+    expect(
+      screen.getByText("Прогноз спроса на авиабилеты из Москвы: выберите маршрут, дату и цену."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/ваш\S* маршрут/i)).toBeNull();
+  });
+
+  it("TB-AC5: the session-expired notice has status semantics", async () => {
     stubFetch(OPEN);
     render(<AuthScreen onAuthenticated={() => {}} sessionExpired />);
     expect(await screen.findByRole("status")).toHaveTextContent("Сессия истекла, войдите снова");

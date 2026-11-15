@@ -23,7 +23,15 @@ afterEach(() => {
 const SHAPES = "path, rect, circle, line, polygon, polyline, ellipse, use";
 
 describe("SeatMap", () => {
-  it("AC11: the svg is aria-hidden, has no focusable descendants and at most 8 shapes for 1440 seats", () => {
+  it("TB-AC17: the measured figure can shrink below the svg it drew and the svg never overflows it", () => {
+    // A grid item keeps min-width:auto, so without min-w-0 the figure stays as wide as its svg and
+    // the ResizeObserver never reports a narrower board.
+    const { container } = render(<SeatMap seats={270} buys={200} wants={250} />);
+    expect(container.querySelector("figure")).toHaveClass("min-w-0");
+    expect(container.querySelector("svg")).toHaveClass("block", "max-w-full");
+  });
+
+  it("TB-AC11: the svg is aria-hidden, has no focusable descendants and at most 8 shapes for 1440 seats", () => {
     const { container } = render(<SeatMap seats={1440} buys={1300} wants={1400} />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
@@ -33,7 +41,7 @@ describe("SeatMap", () => {
     expect(svg?.querySelectorAll(SHAPES).length).toBeLessThanOrEqual(8);
   });
 
-  it("AC11: the caption states taken and free seats with ru-RU numbers", () => {
+  it("TB-AC11: the caption states taken and free seats with ru-RU numbers", () => {
     render(<SeatMap seats={1440} buys={1300} wants={1400} />);
     const caption = screen.getByText(/1\s300/);
     expect(caption.tagName).toBe("P");
@@ -43,19 +51,19 @@ describe("SeatMap", () => {
     expect(caption.textContent?.trim()).not.toBe("Свободно");
   });
 
-  it("AC11: overflow shows the queue count and +N when it exceeds QUEUE_MAX", () => {
+  it("TB-AC11: overflow shows the queue count and +N when it exceeds QUEUE_MAX", () => {
     const { container } = render(<SeatMap seats={900} buys={900} wants={970} />);
     expect(screen.getByText(/Без места остаются:\s*70/)).toBeInTheDocument();
     expect(container.querySelector("svg")?.textContent).toMatch(/\+\s*58/);
   });
 
-  it("AC11: no overflow shows no queue sentence and no +N label", () => {
+  it("TB-AC11: no overflow shows no queue sentence and no +N label", () => {
     const { container } = render(<SeatMap seats={900} buys={500} wants={600} />);
     expect(screen.queryByText(/Без места/)).toBeNull();
     expect(container.querySelector("svg")?.textContent).not.toMatch(/\+/);
   });
 
-  it("AC16: under reduced motion the svg carries no animation class", () => {
+  it("TB-AC16: under reduced motion the svg carries no animation class", () => {
     setReduced(false);
     const normal = render(<SeatMap seats={270} buys={200} wants={250} />);
     expect(normal.container.querySelector("svg")?.getAttribute("class") ?? "").toMatch(/anim/i);

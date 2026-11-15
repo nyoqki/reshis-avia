@@ -35,7 +35,7 @@ afterEach(() => {
 const intro = (c: HTMLElement) => c.querySelector("[data-intro]")?.getAttribute("data-intro");
 
 describe("Logo", () => {
-  it("AC7: the logo is an img named «Решись Авиа» and renders six tiles", () => {
+  it("TB-AC7: the logo is an img named «Решись Авиа» and renders six tiles", () => {
     const { container } = render(<Logo />);
     expect(screen.getByRole("img", { name: "Решись Авиа" })).toBeTruthy();
     const tiles = Array.from(container.querySelectorAll("[data-tile]")).map((t) =>
@@ -45,39 +45,39 @@ describe("Logo", () => {
     expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("AC7: the first Logo mount of a size has data-intro=true, a second mount of the same size has data-intro=false", () => {
+  it("TB-AC7: the first Logo mount of a size has data-intro=true, a second mount of the same size has data-intro=false", () => {
     const first = render(<Logo size="header" />);
     expect(intro(first.container)).toBe("true");
     const second = render(<Logo size="header" />);
     expect(intro(second.container)).toBe("false");
   });
 
-  it("AC7: intro={false} never plays the intro", () => {
+  it("TB-AC7: intro={false} never plays the intro", () => {
     const { container } = render(<Logo intro={false} />);
     expect(intro(container)).toBe("false");
   });
 
-  it("AC7/AC16: under reduced motion the first mount has data-intro=false", () => {
+  it("TB-AC7/TB-AC16: under reduced motion the first mount has data-intro=false", () => {
     mockReduced(true);
     const { container } = render(<Logo />);
     expect(intro(container)).toBe("false");
   });
 
-  it("AC7: the «Авиа» part uses currentColor so it follows the theme", () => {
+  it("TB-AC7: the «Авиа» part uses currentColor so it follows the theme", () => {
     const { container } = render(<Logo />);
     const word = container.querySelector('[data-part="word"]');
     expect(word).not.toBeNull();
     expect(word?.getAttribute("fill")).toBe("currentColor");
   });
 
-  it("AC7: a hero mount followed by a header mount gives the header data-intro=true", () => {
+  it("TB-AC7: a hero mount followed by a header mount gives the header data-intro=true", () => {
     const hero = render(<Logo size="hero" />);
     expect(intro(hero.container)).toBe("true");
     const header = render(<Logo size="header" />);
     expect(intro(header.container)).toBe("true");
   });
 
-  it("AC2: tile and letter shapes use fill-sign / fill-sign-ink classes and the source has no colour literal", () => {
+  it("TB-AC2: tile and letter shapes use fill-sign / fill-sign-ink classes and the source has no colour literal", () => {
     const { container } = render(<Logo />);
     const tileShapes = container.querySelectorAll('[data-part="tile"]');
     const letterShapes = container.querySelectorAll('[data-part="letter"]');

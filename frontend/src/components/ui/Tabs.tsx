@@ -65,7 +65,7 @@ export function Tabs<T extends string>({
                 "min-h-11 border-b-4 px-4 py-2 text-base focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-offset-2",
                 active
                   ? "border-b-ink font-medium text-ink"
-                  : "border-b-transparent text-ink-2 hover:bg-paper-sunken",
+                  : "border-b-transparent text-ink-2 hover:bg-paper-sunken active:bg-line",
               ].join(" ")}
             >
               {tab.label}

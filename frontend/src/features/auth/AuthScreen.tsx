@@ -115,7 +115,9 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
           <h1 className="m-0">
             <Logo size="hero" />
           </h1>
-          <p className="text-base text-ink-2">Прогноз спроса на авиабилеты по вашим маршрутам.</p>
+          <p className="text-base text-ink-2">
+            Прогноз спроса на авиабилеты из Москвы: выберите маршрут, дату и цену.
+          </p>
         </div>
 
         {sessionExpired ? (

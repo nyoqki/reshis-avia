@@ -16,7 +16,6 @@ from __future__ import annotations
 import hashlib
 import io
 import sys
-import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -62,7 +61,8 @@ FALLBACKS = {
 }
 
 
-def fetch(name: str) -> Path:
+def fetch(name: str) -> io.BytesIO:
+    """Download a source font; return the verified bytes in memory, not a swappable temp file."""
     url, digest = SOURCES[name]
     if not url.startswith("https://"):
         sys.exit(f"refusing non-https source: {url}")
@@ -71,9 +71,7 @@ def fetch(name: str) -> Path:
     got = hashlib.sha256(data).hexdigest()
     if got != digest:
         sys.exit(f"sha256 mismatch for {url}: {got}")
-    path = Path(tempfile.gettempdir()) / f"{name}-source.ttf"
-    path.write_bytes(data)
-    return path
+    return io.BytesIO(data)
 
 
 def build() -> None:
