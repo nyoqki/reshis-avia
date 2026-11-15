@@ -267,25 +267,4 @@ describe("index.css structure", () => {
     expect(block).toMatch(/--spacing\s*:\s*0\.25rem/);
     expect(css).toMatch(/:root\s*\{[^}]*color-scheme:\s*light dark/);
   });
-
-  it("AC2: legacy aliases are fenced by markers and keep the old variables", () => {
-    const s = css.indexOf("/* legacy aliases: start (removed in T21) */");
-    const e = css.indexOf("/* legacy aliases: end */");
-    expect(s).toBeGreaterThanOrEqual(0);
-    expect(e).toBeGreaterThan(s);
-    const legacy = css.slice(s, e);
-    for (const v of [
-      "--bg",
-      "--surface",
-      "--text",
-      "--muted",
-      "--border",
-      "--accent",
-      "--accent-text",
-      "--demand-hits-text",
-    ]) {
-      expect(legacy, v).toMatch(new RegExp(`${v}\\s*:`));
-    }
-    expect(legacy).toMatch(/@theme\s+inline/);
-  });
 });
