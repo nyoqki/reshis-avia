@@ -63,6 +63,34 @@ describe("AppHeader demo notice", () => {
   });
 });
 
+describe("AppHeader layout", () => {
+  it("TB-AC1: a long name stays on one line, cut with an ellipsis, and keeps the full name in its title", () => {
+    const long = "a_rather_long_username_32_chars_";
+    const banner = renderHeader({ username: long, is_demo: false });
+    const name = within(banner).getByText(long);
+    expect(name).toHaveClass("truncate", "min-w-0");
+    expect(name).toHaveAttribute("title", long);
+  });
+
+  it("TB-AC1: below lg «Выйти» shares the first row with the logo; the name and the theme control wrap to the second", () => {
+    const banner = renderHeader();
+    const logout = within(banner).getByRole("button", { name: "Выйти" });
+    expect(logout).toHaveClass("order-2", "lg:order-3");
+    const group = within(banner).getByText("alice").parentElement;
+    expect(group).toHaveClass("order-3", "w-full", "lg:order-2", "lg:w-auto");
+    expect(within(group as HTMLElement).getByRole("radio", { name: "Авто" })).toBeInTheDocument();
+  });
+
+  it("TB-AC1: the shared-demo note is one slim line of text under the header row, not a boxed notice", () => {
+    const banner = renderHeader(DEMO);
+    const note = within(banner).getByText(DEMO_NOTE);
+    expect(note.tagName).toBe("P");
+    expect(note).toHaveClass("text-sm");
+    expect(note.closest(".border")).toBeNull();
+    expect(note.querySelector("svg")).toBeNull();
+  });
+});
+
 describe("AppHeader logout", () => {
   it("TB-AC19: a failing logout shows the error as an alert in the banner and re-enables «Выйти»", async () => {
     vi.stubGlobal(

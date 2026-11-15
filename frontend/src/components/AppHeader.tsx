@@ -12,6 +12,9 @@ import { Notice } from "./ui/Notice";
 // Below Tailwind's sm breakpoint (40rem) the theme control shows icons only.
 const PHONE_QUERY = "(max-width: 39.999rem)";
 
+// One slim line under the header row: the name and the badge already say «demo».
+const DEMO_NOTE = "Общий демо-аккаунт: историю расчётов видят все, кто в\u00a0него входит";
+
 function subscribePhone(onChange: () => void): () => void {
   if (typeof window.matchMedia !== "function") return () => {};
   const mql = window.matchMedia(PHONE_QUERY);
@@ -46,29 +49,38 @@ export function AppHeader({ user, onLoggedOut }: Props) {
     }
   }
 
+  // Below lg the header takes two rows: the logo with «Выйти», then the name and the theme control.
+  // From lg one row: logo, name, theme control, «Выйти». DOM order follows the wide layout.
   return (
     <header className="border-b border-line bg-paper-raised">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-        <h1 className="m-0 flex items-center">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+        <h1 className="order-1 m-0 flex items-center">
           <Logo size="header" />
         </h1>
-        <div className="ml-auto flex min-w-0 flex-wrap items-center gap-3">
-          <span className="min-w-0 text-sm text-ink-2 [overflow-wrap:anywhere]">
+        <div className="order-3 flex w-full min-w-0 items-center gap-3 lg:order-2 lg:ml-auto lg:w-auto">
+          <span title={user.username} className="min-w-0 truncate text-sm text-ink-2">
             {user.username}
           </span>
-          {user.is_demo ? <Badge tone="demo">демо</Badge> : null}
-          <ThemeToggle compact={phone} />
-          <Button variant="ghost" loading={pending} onClick={() => void logout()}>
-            Выйти
-          </Button>
+          {user.is_demo ? (
+            <Badge tone="demo" className="shrink-0">
+              демо
+            </Badge>
+          ) : null}
+          <div className="ml-auto shrink-0 lg:ml-0">
+            <ThemeToggle compact={phone} />
+          </div>
         </div>
+        <Button
+          variant="ghost"
+          loading={pending}
+          onClick={() => void logout()}
+          className="order-2 ml-auto lg:order-3 lg:ml-0"
+        >
+          Выйти
+        </Button>
       </div>
       {user.is_demo ? (
-        <div className="mx-auto max-w-5xl px-4 pb-3">
-          <Notice tone="info">
-            Общий демо-аккаунт: историю расчётов видят все, кто в него входит
-          </Notice>
-        </div>
+        <p className="mx-auto max-w-5xl px-4 pb-3 text-sm text-ink-2">{DEMO_NOTE}</p>
       ) : null}
       {error ? (
         <div className="mx-auto max-w-5xl px-4 pb-3">

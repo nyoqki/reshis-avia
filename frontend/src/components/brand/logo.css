@@ -9,8 +9,16 @@
   width: auto;
 }
 
+/* 24 px on phones, where the logo shares the header's first row with «Выйти» down to 360 px;
+   32 px from Tailwind's sm breakpoint */
 .logo[data-size="header"] {
-  height: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 6);
+}
+
+@media (width >= 40rem) {
+  .logo[data-size="header"] {
+    height: calc(var(--spacing) * 8);
+  }
 }
 
 .logo[data-size="hero"] {
