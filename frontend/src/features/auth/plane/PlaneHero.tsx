@@ -16,10 +16,7 @@ export interface PlaneHeroProps {
 }
 
 function wideEnough(): boolean {
-  return (
-    typeof window.matchMedia === "function" &&
-    window.matchMedia(WIDE_QUERY).matches
-  );
+  return typeof window.matchMedia === "function" && window.matchMedia(WIDE_QUERY).matches;
 }
 
 /**
@@ -37,12 +34,7 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
     const box = boxRef.current;
     const canvas = canvasRef.current;
     if (!box || !canvas || reducedMotion) return;
-    if (
-      typeof IntersectionObserver === "undefined" ||
-      !wideEnough() ||
-      !webglAvailable()
-    )
-      return;
+    if (typeof IntersectionObserver === "undefined" || !wideEnough() || !webglAvailable()) return;
 
     // Effect-scoped guards: `alive` turns false on cleanup, `loading` makes the import single-flight.
     let alive = true;
@@ -114,10 +106,7 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
   }, [reducedMotion]);
 
   return (
-    <div
-      ref={boxRef}
-      className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}
-    >
+    <div ref={boxRef} className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}>
       <img
         src={still}
         alt=""
