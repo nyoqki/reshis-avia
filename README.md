@@ -7,7 +7,7 @@
 купить билет и сколько купят на самом деле. Рядом — рекомендованная цена с коридором, вероятность того, что места
 закончатся, и график распределения спроса.
 
-Автор: Lars Johnson
+Автор: nyoqki
 
 - Живой адрес: **https://reshis.jiraya.ru**, документация API — https://reshis.jiraya.ru/docs
 - Демо-доступ: см. раздел «Демо-доступ».
@@ -73,7 +73,7 @@
 
 ## Данные и подмена на my_forecast.csv
 
-- `data/my_forecast.csv` — наш прогноз из ML-блока кейса (`Lars_Johnson_my_forecast.csv`, взвешенный ансамбль
+- `data/my_forecast.csv` — наш прогноз из ML-блока кейса (`ФИО_my_forecast.csv`, взвешенный ансамбль
   AutoGluon). На нём работает живой адрес: `compose.prod.yaml` задаёт `REHIS_FORECAST_PATH=/app/data/my_forecast.csv`.
 - `data/seasonal_forecast.csv` — заглушка организаторов в том же формате: 155 строк (5 маршрутов на 31 день),
   30 колонок: `route`, `date`, `seats` и по три колонки на каждый квантиль 0.1…0.9 (`{q}_base_demand`, `{q}_price`,
