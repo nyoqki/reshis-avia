@@ -165,4 +165,22 @@ describe("HistoryPanel", () => {
     expect(blanks.length).toBeGreaterThan(0);
     for (const b of blanks) expect(b.closest('[aria-hidden="true"]')).not.toBeNull();
   });
+
+  it("TB-AC13: the empty text comes first, then a single row of blank cells", async () => {
+    vi.mocked(api.history).mockResolvedValue({ items: [] });
+    const { container } = render(
+      <HistoryPanel refreshKey={0} onSelect={() => {}} onSessionExpired={() => {}} />,
+    );
+    const text = await screen.findByText(/Пока нет расчётов/);
+    const rows = new Set(
+      Array.from(container.querySelectorAll('.flap-cell[data-tone="blank"]')).map(
+        (cell) => cell.parentElement,
+      ),
+    );
+    expect(rows.size).toBe(1);
+    const [row] = rows;
+    expect(
+      text.compareDocumentPosition(row as Element) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });

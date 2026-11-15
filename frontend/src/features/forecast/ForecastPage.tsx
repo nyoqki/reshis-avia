@@ -9,7 +9,7 @@ import type {
   RoutesResponse,
 } from "../../api/types";
 import { Board } from "../../components/board/Board";
-import { FlapCell } from "../../components/board/FlapCell";
+import { FlapText } from "../../components/board/FlapText";
 import { Notice } from "../../components/ui/Notice";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { displayWants, formatInt, formatRub } from "../../lib/format";
@@ -45,8 +45,11 @@ interface StoredResult {
   substitutedPrice: number | null;
 }
 
-const EMPTY_ROWS = ["a", "b", "c"];
-const EMPTY_CELLS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+// Before the first calculation the board says what to do, then shows one status row, where the
+// result board's status will flip in. Rows of blank cells read as a loading skeleton.
+const EMPTY_PROMPT =
+  "Выберите маршрут, дату и\u00a0цену, затем нажмите «Рассчитать»: здесь появится табло с\u00a0прогнозом.";
+const EMPTY_STATUS = "ЖДЁМ РАСЧЁТ";
 
 function announcement(result: ForecastResponse, substitutedPrice: number | null): string {
   const prefix =
@@ -245,19 +248,11 @@ export function ForecastPage({ onSessionExpired }: Props) {
           ) : (
             <Board as="section" aria-label="Табло прогноза">
               <div className="grid gap-4">
-                <div aria-hidden="true" className="grid gap-2">
-                  {EMPTY_ROWS.map((row) => (
-                    <div key={row} className="flex flex-wrap gap-1">
-                      {EMPTY_CELLS.map((cell) => (
-                        <FlapCell key={cell} char=" " tone="blank" size="sm" />
-                      ))}
-                    </div>
-                  ))}
+                <p className="text-base text-board-ink-2">{EMPTY_PROMPT}</p>
+                {/* decoration: the sentence above already says it */}
+                <div aria-hidden="true">
+                  <FlapText text={EMPTY_STATUS} size="fit" />
                 </div>
-                <p className="text-base text-board-ink-2">
-                  Выберите маршрут, дату и цену, затем нажмите «Рассчитать»: здесь появится табло с
-                  прогнозом.
-                </p>
               </div>
             </Board>
           )}

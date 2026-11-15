@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
@@ -359,6 +359,21 @@ describe("ForecastPage recommended price", () => {
       .filter((el) => el.closest("button") === null && el.closest("form") === null);
     expect(prompt.length).toBeGreaterThan(0);
     for (const el of prompt) expect(el).not.toHaveTextContent(/Пока нет расчётов/);
+  });
+
+  it("TB-AC10: the empty board says what to do first, then one flap row «ЖДЁМ РАСЧЁТ» for decoration, not rows of blank cells", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await screen.findByRole("button", { name: "Рассчитать" });
+    const board = screen.getByRole("region", { name: "Табло прогноза" });
+    const prompt = within(board).getByText(/^Выберите маршрут, дату и цену/);
+    const word = within(board).getByText("ЖДЁМ РАСЧЁТ");
+    const row = word.closest('[aria-hidden="true"]') as Element;
+    expect(row).not.toBeNull();
+    expect(prompt.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(board.querySelectorAll(".flap-row")).toHaveLength(1);
+    expect(board.querySelectorAll(".flap-cell")).toHaveLength("ЖДЁМ РАСЧЁТ".length);
+    expect(board.querySelectorAll('.flap-cell[data-tone="blank"]')).toHaveLength(0);
   });
 
   it("TB-AC17: the form comes first in DOM order, then the result board, then the chart and the history", async () => {

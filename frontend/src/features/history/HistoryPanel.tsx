@@ -21,6 +21,7 @@ type State =
   | { status: "ready"; items: HistoryItem[]; fresh: ReadonlySet<number> };
 
 const BLANK_CELLS = Array.from({ length: 8 }, (_, i) => `blank-${i}`);
+const EMPTY_TEXT = "Пока нет расчётов. Рассчитайте первый\u00a0— он появится здесь.";
 
 function routeLabel(item: HistoryItem): string {
   return `${item.origin} → ${item.destination}`;
@@ -137,14 +138,12 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
       ) : null}
       {state.status === "ready" && state.items.length === 0 ? (
         <div className="grid gap-3">
+          <p className="text-sm text-board-ink-2">{EMPTY_TEXT}</p>
           <div aria-hidden="true" className="flex gap-1">
             {BLANK_CELLS.map((key) => (
-              <FlapCell key={key} char=" " tone="blank" size="sm" />
+              <FlapCell key={key} char=" " tone="blank" size="fit" />
             ))}
           </div>
-          <p className="text-sm text-board-ink-2">
-            Пока нет расчётов. Рассчитайте первый — он появится здесь.
-          </p>
         </div>
       ) : null}
       {state.status === "ready" && state.items.length > 0 ? (
