@@ -16,7 +16,10 @@ export interface PlaneHeroProps {
 }
 
 function wideEnough(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia(WIDE_QUERY).matches;
+  return (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(WIDE_QUERY).matches
+  );
 }
 
 /**
@@ -34,7 +37,12 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
     const box = boxRef.current;
     const canvas = canvasRef.current;
     if (!box || !canvas || reducedMotion) return;
-    if (typeof IntersectionObserver === "undefined" || !wideEnough() || !webglAvailable()) return;
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      !wideEnough() ||
+      !webglAvailable()
+    )
+      return;
 
     // Effect-scoped guards: `alive` turns false on cleanup, `loading` makes the import single-flight.
     let alive = true;
@@ -106,7 +114,10 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
   }, [reducedMotion]);
 
   return (
-    <div ref={boxRef} className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}>
+    <div
+      ref={boxRef}
+      className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}
+    >
       <img
         src={still}
         alt=""
@@ -115,11 +126,13 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
         decoding="async"
         className="absolute inset-0 h-full w-full object-contain"
       />
-      <canvas
-        ref={canvasRef}
-        data-visible={ready ? "true" : "false"}
-        className={`absolute inset-0 h-full w-full transition-opacity duration-[var(--duration-grow)] ease-[var(--ease-out)] ${ready ? "opacity-100" : "opacity-0"}`}
-      />
+      {reducedMotion ? null : (
+        <canvas
+          ref={canvasRef}
+          data-visible={ready ? "true" : "false"}
+          className={`absolute inset-0 h-full w-full transition-opacity duration-[var(--duration-grow)] ease-[var(--ease-out)] ${ready ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
     </div>
   );
 }
