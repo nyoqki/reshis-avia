@@ -8,6 +8,10 @@ import type {
   HistoryItem,
   RoutesResponse,
 } from "../../api/types";
+import { Board } from "../../components/board/Board";
+import { FlapCell } from "../../components/board/FlapCell";
+import { Notice } from "../../components/ui/Notice";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { displayWants, formatInt, formatRub } from "../../lib/format";
 import { HistoryPanel } from "../history/HistoryPanel";
 import { ForecastForm } from "./ForecastForm";
@@ -27,9 +31,6 @@ type RoutesState =
 const MAX_PRICE = 1_000_000;
 const PRICE_RULE = `Укажите цену в целых рублях: от 1 до ${formatRub(MAX_PRICE)}`;
 
-const SECONDARY =
-  "min-h-11 cursor-pointer rounded-lg border border-border px-4 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-
 function waitMessage(retryAfter: number | null): string {
   if (retryAfter === null) return "Слишком много запросов. Подождите немного и попробуйте снова.";
   if (retryAfter < 120) {
@@ -38,8 +39,21 @@ function waitMessage(retryAfter: number | null): string {
   return `Слишком много запросов. Подождите ${Math.ceil(retryAfter / 60)} мин и попробуйте снова.`;
 }
 
-function announcement(result: ForecastResponse): string {
-  return `Прогноз готов. Желают купить: ${formatInt(displayWants(result.wants))}, купят: ${formatInt(result.buys)}, мест в самолёте: ${formatInt(result.seats)}.`;
+interface StoredResult {
+  response: ForecastResponse;
+  // The price taken from the recommendation for this very result, or null after a regular submit.
+  substitutedPrice: number | null;
+}
+
+const EMPTY_ROWS = ["a", "b", "c"];
+const EMPTY_CELLS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+
+function announcement(result: ForecastResponse, substitutedPrice: number | null): string {
+  const prefix =
+    substitutedPrice === null
+      ? ""
+      : `Подставлена рекомендуемая цена ${formatRub(substitutedPrice)}. `;
+  return `${prefix}Прогноз готов. Желают купить: ${formatInt(displayWants(result.wants))}, купят: ${formatInt(result.buys)}, мест в самолёте: ${formatInt(result.seats)}.`;
 }
 
 function mediaMatches(query: string): boolean {
@@ -59,11 +73,13 @@ function initialValue(routes: RoutesResponse): ForecastRequest {
 export function ForecastPage({ onSessionExpired }: Props) {
   const [state, setState] = useState<RoutesState>({ status: "loading" });
   const [value, setValue] = useState<ForecastRequest | null>(null);
-  const [result, setResult] = useState<ForecastResponse | null>(null);
+  const [stored, setStored] = useState<StoredResult | null>(null);
   const [pending, setPending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const result = stored?.response ?? null;
+  const substitutedPrice = stored?.substitutedPrice ?? null;
   const inFlight = useRef(false);
   const formArea = useRef<HTMLDivElement>(null);
   const resultArea = useRef<HTMLDivElement>(null);
@@ -114,18 +130,20 @@ export function ForecastPage({ onSessionExpired }: Props) {
   // the top (beside the form on a wide screen) nothing moves. refreshKey grows only on success.
   useEffect(() => {
     const area = resultArea.current;
-    if (refreshKey === 0 || !area) return;
+    // After «Подставить» the result is already on screen and focus sits on that button.
+    if (refreshKey === 0 || !area || substitutedPrice !== null) return;
     const { top } = area.getBoundingClientRect();
     if (top >= 0 && top <= window.innerHeight / 3) return;
     const behavior = mediaMatches("(prefers-reduced-motion: reduce)") ? "auto" : "smooth";
     area.scrollIntoView?.({ behavior, block: "start" });
-  }, [refreshKey]);
+  }, [refreshKey, substitutedPrice]);
 
-  async function submit() {
-    if (inFlight.current || !value) return;
+  async function submit(override?: ForecastRequest, opts?: { substituted?: boolean }) {
+    const request = override ?? value;
+    if (inFlight.current || !request) return;
     // An empty field arrives as 0, and the input does not stop fractions: answer here, in words, and
     // move focus to the field once the message is in the DOM, so a screen reader reads them together.
-    if (!Number.isInteger(value.price) || value.price < 1 || value.price > MAX_PRICE) {
+    if (!Number.isInteger(request.price) || request.price < 1 || request.price > MAX_PRICE) {
       flushSync(() => {
         setFieldErrors({ price: PRICE_RULE });
         setFormError(null);
@@ -138,9 +156,9 @@ export function ForecastPage({ onSessionExpired }: Props) {
     setFieldErrors({});
     setFormError(null);
     try {
-      const response = await api.forecast(value);
+      const response = await api.forecast(request);
       if (alive.current) {
-        setResult(response);
+        setStored({ response, substitutedPrice: opts?.substituted ? request.price : null });
         setRefreshKey((k) => k + 1);
       }
     } catch (e) {
@@ -161,6 +179,13 @@ export function ForecastPage({ onSessionExpired }: Props) {
     }
   }
 
+  function applyRecommended(price: number) {
+    if (!value) return;
+    const next = { ...value, price };
+    setValue(next);
+    void submit(next, { substituted: true });
+  }
+
   function selectHistory(item: HistoryItem) {
     setValue({
       origin: item.origin,
@@ -175,62 +200,75 @@ export function ForecastPage({ onSessionExpired }: Props) {
   }
 
   if (state.status === "loading") {
-    return <div className="skeleton" aria-busy="true" />;
+    return <Skeleton />;
   }
 
   if (state.status === "error") {
     return (
-      <div role="alert" className="grid justify-items-start gap-3">
-        <p>{state.message}</p>
-        <button type="button" onClick={loadRoutes} className={SECONDARY}>
-          Повторить
-        </button>
-      </div>
+      <Notice tone="error" onRetry={loadRoutes}>
+        {state.message}
+      </Notice>
     );
   }
 
   if (!value) return null;
 
+  const canRetry =
+    formError !== null &&
+    !formError.startsWith("Слишком много запросов") &&
+    Object.keys(fieldErrors).length === 0;
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
+    <div className="grid gap-6">
       <p role="status" className="sr-only">
-        {result ? announcement(result) : ""}
+        {result ? announcement(result, substitutedPrice) : ""}
       </p>
-      <div ref={formArea} className="grid gap-4">
-        <ForecastForm
-          routes={state.routes}
-          value={value}
-          onChange={setValue}
-          onSubmit={() => void submit()}
-          pending={pending}
-          errors={fieldErrors}
-        />
-        {formError ? (
-          <div role="alert" className="grid justify-items-start gap-3 text-sm text-danger">
-            <p>{formError}</p>
-            {!formError.startsWith("Слишком много запросов") &&
-            Object.keys(fieldErrors).length === 0 ? (
-              <button type="button" onClick={() => void submit()} className={SECONDARY}>
-                Повторить
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-      <div ref={resultArea} className="grid min-w-0 scroll-mt-4 gap-6">
-        {result ? (
-          <ResultPanel
-            result={result}
-            onUseRecommended={(price) => setValue((v) => (v ? { ...v, price } : v))}
+      <div className="grid gap-6 lg:grid-cols-[var(--size-form)_minmax(0,1fr)] lg:items-start">
+        <div ref={formArea} className="grid gap-4">
+          <ForecastForm
+            routes={state.routes}
+            value={value}
+            onChange={setValue}
+            onSubmit={() => void submit()}
+            pending={pending}
+            errors={fieldErrors}
           />
-        ) : null}
-        {result ? <ScenarioChart result={result} /> : null}
-        <HistoryPanel
-          refreshKey={refreshKey}
-          onSelect={selectHistory}
-          onSessionExpired={onSessionExpired}
-        />
+          {formError ? (
+            <Notice tone="error" onRetry={canRetry ? () => void submit() : undefined}>
+              {formError}
+            </Notice>
+          ) : null}
+        </div>
+        <div ref={resultArea} className="min-w-0 scroll-mt-4">
+          {result ? (
+            <ResultPanel result={result} onUseRecommended={applyRecommended} pending={pending} />
+          ) : (
+            <Board as="section" aria-label="Табло прогноза">
+              <div className="grid gap-4">
+                <div aria-hidden="true" className="grid gap-2">
+                  {EMPTY_ROWS.map((row) => (
+                    <div key={row} className="flex flex-wrap gap-1">
+                      {EMPTY_CELLS.map((cell) => (
+                        <FlapCell key={cell} char=" " tone="blank" size="sm" />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-base text-board-ink-2">
+                  Выберите маршрут, дату и цену, затем нажмите «Рассчитать»: здесь появится табло с
+                  прогнозом.
+                </p>
+              </div>
+            </Board>
+          )}
+        </div>
       </div>
+      {result ? <ScenarioChart result={result} /> : null}
+      <HistoryPanel
+        refreshKey={refreshKey}
+        onSelect={selectHistory}
+        onSessionExpired={onSessionExpired}
+      />
     </div>
   );
 }
