@@ -85,11 +85,10 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
   const status = STATUS[result.limit];
   const values = [result.seats, displayWants(result.wants), result.buys, result.free_seats];
   const minCells = Math.max(...values.map((v) => String(Math.abs(Math.round(v))).length));
-  // Four digits (1 440 seats) do not fit a quarter of the board at the md cell size: smaller cells,
-  // and four cards in a row only where the board is wide enough for them.
-  const wide = minCells >= 4;
-  const cellSize: FlapSize = wide ? "sm" : "md";
-  const cardGrid = wide ? "grid-cols-2 @2xl:grid-cols-4" : "grid-cols-2 @xl:grid-cols-4";
+  // Four digits (1 440 seats) do not fit a quarter of the board at the md cell size. They take the
+  // compact step instead of moving the cards to a 2×2 grid: the four cards keep their places
+  // between the results the jury compares.
+  const cellSize: FlapSize = minCells >= 4 ? "compact" : "md";
 
   return (
     <Board
@@ -119,7 +118,7 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
           </Notice>
         ) : null}
 
-        <div className={`grid gap-3 ${cardGrid}`}>
+        <div className="grid grid-cols-2 gap-3 @xl:grid-cols-4">
           <Card
             label="Мест в самолёте"
             value={values[0]}

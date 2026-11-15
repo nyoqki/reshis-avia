@@ -57,6 +57,10 @@
   --text-lg--line-height: 1.75rem;
   --text-xl: 1.5625rem;
   --text-xl--line-height: 2rem;
+  /* four-digit numbers in a quarter-width result card: the step between flap-xs and flap-sm keeps
+     them as wide as three flap-md digits, so four cards stay in one row */
+  --text-flap-compact: 1.5625rem;
+  --text-flap-compact--line-height: 1;
   --text-flap-sm: 1.9375rem;
   --text-flap-sm--line-height: 1;
   --text-flap-md: 2.4375rem;

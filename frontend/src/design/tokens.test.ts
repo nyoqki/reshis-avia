@@ -255,6 +255,7 @@ describe("index.css structure", () => {
       "--text-base",
       "--text-lg",
       "--text-xl",
+      "--text-flap-compact",
       "--text-flap-sm",
       "--text-flap-md",
       "--text-flap-lg",

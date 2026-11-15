@@ -240,6 +240,30 @@ describe("ResultPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("TB-AC10: a four-digit result keeps the four cards in one desktop row, on the compact flap step", () => {
+    // 1 440 seats used to drop the cards to a 2×2 grid at 1 440 px, so the numbers the jury
+    // compares moved between results. The grid is the same for any digit count now; four
+    // digits take the step between flap-xs and flap-sm and stay as wide as three md digits.
+    const grids: string[] = [];
+    for (const [result, size] of [
+      [CONTROL, "text-flap-md"],
+      [NO_DEMAND, "text-flap-compact"],
+    ] as const) {
+      const { container, unmount } = render(
+        <ResultPanel result={result} onUseRecommended={() => {}} />,
+      );
+      const grid = card("Мест в самолёте").parentElement as HTMLElement;
+      expect(grid).toHaveClass("grid-cols-2", "@xl:grid-cols-4");
+      grids.push(grid.className);
+      const cells = container.querySelectorAll(".flap-cell");
+      const cardCells = Array.from(cells).filter((c) => grid.contains(c));
+      expect(cardCells.length).toBeGreaterThan(0);
+      for (const cell of cardCells) expect(cell).toHaveClass(size);
+      unmount();
+    }
+    expect(grids[0]).toBe(grids[1]);
+  });
+
   it("TB-AC11: the seat map caption is present", () => {
     render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
     expect(screen.getByText(/Занято\s+900\s+из\s+900\s+мест/)).toBeInTheDocument();

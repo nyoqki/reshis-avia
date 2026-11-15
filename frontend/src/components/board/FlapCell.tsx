@@ -1,4 +1,4 @@
-export type FlapSize = "xs" | "sm" | "md" | "lg" | "fit";
+export type FlapSize = "xs" | "compact" | "sm" | "md" | "lg" | "fit";
 
 export interface FlapCellProps {
   char: string;
@@ -10,6 +10,7 @@ export interface FlapCellProps {
 /** xs…lg map to --text-flap-*; `fit` (xs on phones, sm from the sm breakpoint) lives in board.css. */
 export const FLAP_SIZE: Record<FlapSize, string> = {
   xs: "text-flap-xs",
+  compact: "text-flap-compact",
   sm: "text-flap-sm",
   md: "text-flap-md",
   lg: "text-flap-lg",
