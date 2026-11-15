@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "../../api/client";
 import type { ForecastResponse, HistoryItem, RoutesResponse } from "../../api/types";
 import { ForecastPage } from "./ForecastPage";
 
@@ -129,5 +130,58 @@ describe("ForecastPage regressions", () => {
 
     expect(screen.getByLabelText("Куда")).toHaveValue("Казань");
     expect(screen.getByLabelText("Куда")).toHaveFocus();
+  });
+
+  async function calculated() {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.forecast).mockResolvedValueOnce(RESPONSE);
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    const status = await screen.findByRole("status");
+    await user.click(await screen.findByRole("button", { name: "Рассчитать" }));
+    const use = await screen.findByRole("button", { name: "Подставить" });
+    await waitFor(() => expect(status).toHaveTextContent(/Прогноз готов/));
+    return { user, use, status };
+  }
+
+  it("AC14: after «Подставить» the status announces the substituted price and focus stays on the button", async () => {
+    const { user, use, status } = await calculated();
+    vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
+    await user.click(use);
+
+    await waitFor(() =>
+      expect(status).toHaveTextContent(
+        /Подставлена рекомендуемая цена 9\s500\s₽\. Прогноз готов\./,
+      ),
+    );
+    expect(screen.getByRole("button", { name: "Подставить" })).toHaveFocus();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+  });
+
+  it("AC14: «Подставить» then a regular «Рассчитать» announces without the substitution prefix", async () => {
+    const { user, use, status } = await calculated();
+    vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
+    await user.click(use);
+    await waitFor(() => expect(status).toHaveTextContent(/Подставлена/));
+
+    vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, buys: 800 });
+    await user.click(screen.getByRole("button", { name: "Рассчитать" }));
+
+    await waitFor(() => expect(status).toHaveTextContent(/купят: 800/));
+    expect(status.textContent ?? "").toMatch(/^Прогноз готов\./);
+    expect(status).not.toHaveTextContent(/Подставлена/);
+  });
+
+  it("AC14: a failed substituted request followed by a successful regular submit announces without the prefix", async () => {
+    const { user, use, status } = await calculated();
+    vi.mocked(api.forecast).mockRejectedValueOnce(new ApiError(500, "Сервер временно недоступен."));
+    await user.click(use);
+    expect(await screen.findByText("Сервер временно недоступен.")).toBeVisible();
+
+    vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, buys: 800 });
+    await user.click(screen.getByRole("button", { name: "Рассчитать" }));
+
+    await waitFor(() => expect(status).toHaveTextContent(/купят: 800/));
+    expect(status.textContent ?? "").toMatch(/^Прогноз готов\./);
   });
 });

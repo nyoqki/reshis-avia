@@ -300,3 +300,120 @@ describe("ForecastPage history", () => {
     await waitFor(() => expect(api.history).toHaveBeenCalledTimes(2));
   });
 });
+
+describe("ForecastPage recommended price", () => {
+  async function calculated() {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    vi.mocked(api.forecast).mockResolvedValueOnce(RESPONSE);
+    const user = userEvent.setup();
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await user.click(await screen.findByRole("button", { name: "Рассчитать" }));
+    const use = await screen.findByRole("button", { name: "Подставить" });
+    return { user, use };
+  }
+
+  it("AC14: clicking «Подставить» sets the price to 9500 and sends a second forecast for the same route and date", async () => {
+    const { user, use } = await calculated();
+    vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500 });
+    await user.click(use);
+
+    expect(screen.getByLabelText("Цена билета, ₽")).toHaveValue(9500);
+    await waitFor(() => expect(api.forecast).toHaveBeenCalledTimes(2));
+    const [first, second] = vi.mocked(api.forecast).mock.calls.map((c) => c[0]);
+    expect(second).toEqual({ ...first, price: 9500 });
+  });
+
+  it("AC14: a second click on «Подставить» while that request is pending sends nothing more", async () => {
+    const { user, use } = await calculated();
+    vi.mocked(api.forecast).mockReturnValueOnce(new Promise<ForecastResponse>(() => {}));
+    await user.click(use);
+    await waitFor(() => expect(api.forecast).toHaveBeenCalledTimes(2));
+    await user.click(use);
+    await user.click(use);
+    expect(api.forecast).toHaveBeenCalledTimes(2);
+  });
+
+  it("AC10: before the first calculation the empty board shows a prompt and no card label", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await screen.findByRole("button", { name: "Рассчитать" });
+
+    for (const label of ["Мест в самолёте", "Желают купить", "Купят", "Свободно"]) {
+      expect(screen.queryByText(label)).toBeNull();
+    }
+    expect(screen.queryByRole("heading", { name: "Результат прогноза" })).toBeNull();
+    const prompt = screen
+      .queryAllByText(/Рассчитать/)
+      .filter((el) => el.closest("button") === null && el.closest("form") === null);
+    expect(prompt.length).toBeGreaterThan(0);
+  });
+
+  it("AC10: the empty board prompt does not contain «Пока нет расчётов»", async () => {
+    vi.mocked(api.routes).mockResolvedValue(ROUTES);
+    render(<ForecastPage onSessionExpired={() => {}} />);
+    await screen.findByRole("button", { name: "Рассчитать" });
+    // The history empty text is the only place that says it, so the e2e substring match stays unique.
+    expect(await screen.findAllByText(/Пока нет расчётов/)).toHaveLength(1);
+    const prompt = screen
+      .queryAllByText(/Рассчитать/)
+      .filter((el) => el.closest("button") === null && el.closest("form") === null);
+    expect(prompt.length).toBeGreaterThan(0);
+    for (const el of prompt) expect(el).not.toHaveTextContent(/Пока нет расчётов/);
+  });
+
+  it("AC17: the form comes first in DOM order, then the result board, then the chart and the history", async () => {
+    const { use } = await calculated();
+    const form = screen.getByRole("button", { name: "Рассчитать" });
+    const board = screen.getByRole("heading", { name: "Результат прогноза" });
+    const chart = screen.getByRole("heading", { name: /Распределение спроса/ });
+    const history = screen.getByRole("heading", { name: /История/ });
+    const precedes = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(precedes(form, board)).toBe(true);
+    expect(precedes(use, chart)).toBe(true);
+    expect(precedes(board, chart)).toBe(true);
+    expect(precedes(chart, history)).toBe(true);
+  });
+
+  describe("scrolling", () => {
+    type ScrollFn = Element["scrollIntoView"];
+    const original = Element.prototype.scrollIntoView;
+    let scroll: Mock<ScrollFn>;
+    beforeEach(() => {
+      scroll = vi.fn<ScrollFn>();
+      Element.prototype.scrollIntoView = scroll;
+      // The result column starts below the first screen, as on a phone.
+      vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+        top: window.innerHeight + 100,
+        bottom: window.innerHeight + 500,
+        left: 0,
+        right: 360,
+        x: 0,
+        y: window.innerHeight + 100,
+        width: 360,
+        height: 400,
+        toJSON: () => ({}),
+      });
+    });
+    afterEach(() => {
+      Element.prototype.scrollIntoView = original;
+      vi.restoreAllMocks();
+    });
+
+    it("AC14: after «Подставить» nothing scrolls and focus stays on the button; a regular submit still scrolls", async () => {
+      const { user, use } = await calculated();
+      await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+
+      vi.mocked(api.forecast).mockResolvedValueOnce({ ...RESPONSE, price: 9500, buys: 800 });
+      await user.click(use);
+      await waitFor(() => expect(api.forecast).toHaveBeenCalledTimes(2));
+      await screen.findByText("800");
+      expect(scroll).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Подставить" })).toHaveFocus();
+
+      vi.mocked(api.forecast).mockResolvedValueOnce(RESPONSE);
+      await user.click(screen.getByRole("button", { name: "Рассчитать" }));
+      await waitFor(() => expect(scroll).toHaveBeenCalledTimes(2));
+    });
+  });
+});
