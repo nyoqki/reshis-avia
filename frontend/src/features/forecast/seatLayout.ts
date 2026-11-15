@@ -66,6 +66,8 @@ function pickGrid(seats: number, width: number): { columns: number; unit: number
 /**
  * The queue as a compact block of seat-sized units: one row up to QUEUE_MIN_COLUMNS people, then
  * at most QUEUE_ROWS rows, never wider than the cabin. A short last row leaves a notch on the right.
+ * A queue longer than that block holds (a very low price on a small plane) fills it completely;
+ * `count` keeps the real number for the caption, so the block never out-weighs the cabin.
  */
 function queueLayout(count: number, unit: number, cabinColumns: number): QueueLayout {
   if (count <= 0) return { count: 0, columns: 0, rows: 0, width: 0, height: 0, path: "" };
@@ -74,10 +76,11 @@ function queueLayout(count: number, unit: number, cabinColumns: number): QueueLa
     cabinColumns,
     Math.max(Math.min(count, QUEUE_MIN_COLUMNS), Math.ceil(count / QUEUE_ROWS)),
   );
-  const rows = Math.ceil(count / columns);
+  const shown = Math.min(count, QUEUE_ROWS * columns);
+  const rows = Math.ceil(shown / columns);
   const width = columns * step - GAP;
   const height = rows * step - GAP;
-  const last = count - (rows - 1) * columns;
+  const last = shown - (rows - 1) * columns;
   const path =
     last === columns
       ? `M0 0H${width}V${height}H0Z`

@@ -214,8 +214,13 @@ describe("ScenarioChart", () => {
   });
 
   it("TB-AC12: an empty chart shows no hover hint, and a focused bar still gets its readout", () => {
-    render(<ScenarioChart result={EMPTY} />);
+    const { container } = render(<ScenarioChart result={EMPTY} />);
     expect(screen.queryByText(/Наведите на столбик/)).toBeNull();
+    // the readout row is already in place, so focusing a bar does not shift the caption
+    const caption = container.querySelector("figcaption") as HTMLElement;
+    const row = caption.previousElementSibling as HTMLElement;
+    expect(row.tagName).toBe("DIV");
+    expect(row.className).toMatch(/(^|\s)min-h-17(\s|$)/);
     screen.getAllByRole("button", { name: /желают/ })[0].focus();
     expect(screen.getByText(/Желают:\s*0\s*\(по формуле:\s*−3\s500\)/)).toBeVisible();
   });
@@ -257,7 +262,8 @@ describe("ScenarioChart", () => {
         labelX,
       );
     }
-    expect(labelX + "Мест: 900".length * 14 * 0.57).toBeLessThanOrEqual(
+    // 0.62 em a character covers the semibold label in Golos Text and in a fallback face
+    expect(labelX + "Мест: 900".length * 14 * 0.62).toBeLessThanOrEqual(
       Number(svg.getAttribute("width")),
     );
   });

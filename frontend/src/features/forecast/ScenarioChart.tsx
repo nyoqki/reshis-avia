@@ -32,9 +32,13 @@ const FALLBACK_WIDTH = 640;
  */
 const NARROW_WIDTH = 480;
 const SEATS_DASH = "6 4";
-/** Gap between the end of the seats line and its label; the label runs about 0.57 em a character. */
+/**
+ * Gap between the end of the seats line and its label, and the margin reserved for the label: about
+ * 0.51 em a character in semibold Golos Text, so 0.62 em leaves room for a wider fallback face
+ * (the svg clips whatever does not fit).
+ */
 const SEATS_LABEL_GAP = 6;
-const LABEL_EM = 0.57;
+const LABEL_EM = 0.62;
 
 const HINT = `Наведите на${NBSP}столбик, коснитесь его или нажмите Tab${NBSP}— появятся точные числа.`;
 const CAPTION = `Между соседними столбиками${NBSP}— 10${NBSP}% вероятности`;
@@ -413,10 +417,11 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
             </li>
           </ul>
 
-          {/* Two lines on a phone, one from sm up: the readout replaces the hint without a jump.
-              With no bars to hover in an empty chart, only a focused bar brings the readout. */}
-          {count > 0 && (active !== null || !model.empty) ? (
-            <div className="flex min-h-10 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm sm:min-h-5">
+          {/* Room for three lines on a phone (a negative formula value wraps that far), one from sm
+              up, and always in place: the readout replaces the hint, or appears in an empty chart
+              where there are no bars to hover, without moving the caption. */}
+          {count > 0 ? (
+            <div className="flex min-h-17 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm sm:min-h-5">
               {active !== null ? (
                 <>
                   <span className="font-semibold">{model.labels[active]}</span>
@@ -425,7 +430,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                   </span>
                   <span>{`Купят: ${formatInt(result.scenarios[active]?.buys ?? 0)}`}</span>
                 </>
-              ) : (
+              ) : model.empty ? null : (
                 <span className="text-board-ink-2">{HINT}</span>
               )}
             </div>

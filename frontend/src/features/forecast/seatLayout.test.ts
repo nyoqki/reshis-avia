@@ -39,6 +39,19 @@ describe("seatLayout", () => {
     expect(q).not.toHaveProperty("more");
   });
 
+  it("TB-AC11: a queue longer than four rows of the cabin's width is capped at four rows", () => {
+    // MOW-MRV at 1 ₽: 360 seats, about 832 want to fly, 472 are left without a seat
+    for (const width of [300, 560]) {
+      const l = seatLayout({ seats: 360, buys: 360, wants: 832, width });
+      const step = l.unit + l.gap;
+      expect(l.queue.count).toBe(472);
+      expect(l.queue.columns).toBeLessThanOrEqual(l.columns);
+      expect(l.queue.rows).toBeLessThanOrEqual(4);
+      expect(l.queue.height).toBeLessThanOrEqual(4 * step - l.gap);
+      expect(count(l.queue.path)).toBe(1);
+    }
+  });
+
   it("TB-AC11: wants at or below seats gives an empty queue", () => {
     for (const wants of [0, 100, 270]) {
       const l = seatLayout({ seats: 270, buys: 100, wants, width: 320 });
