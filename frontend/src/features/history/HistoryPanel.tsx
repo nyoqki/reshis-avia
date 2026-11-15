@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, api } from "../../api/client";
 import type { HistoryItem } from "../../api/types";
+import { Board } from "../../components/board/Board";
+import { FlapCell } from "../../components/board/FlapCell";
+import { DataTable, type DataTableColumn } from "../../components/ui/DataTable";
+import { Notice } from "../../components/ui/Notice";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { displayWants, formatDate, formatDateTime, formatInt, formatRub } from "../../lib/format";
 
 interface Props {
@@ -13,21 +18,34 @@ interface Props {
 type State =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ready"; items: HistoryItem[] };
+  | { status: "ready"; items: HistoryItem[]; fresh: ReadonlySet<number> };
 
-const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const SECONDARY = `min-h-11 cursor-pointer rounded-lg border border-border px-4 text-base font-medium ${FOCUS}`;
+const BLANK_CELLS = Array.from({ length: 8 }, (_, i) => `blank-${i}`);
 
 function routeLabel(item: HistoryItem): string {
   return `${item.origin} → ${item.destination}`;
 }
 
 // A new refreshKey refetches the history; the current list stays on screen meanwhile.
+const BUTTON =
+  "min-h-11 cursor-pointer text-start font-medium text-board-ink underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-board-focus";
+
+function flipProps(fresh: ReadonlySet<number>, id: number, order: number) {
+  return fresh.has(id)
+    ? {
+        "data-fresh": "true",
+        "data-row-flip": "",
+        style: { "--row": order } as React.CSSProperties,
+      }
+    : {};
+}
+
 export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) {
   const [state, setState] = useState<State>({ status: "loading" });
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
   const latest = useRef(0);
+  const seen = useRef<ReadonlySet<number> | null>(null);
 
   const load = useCallback(() => {
     const id = ++latest.current;
@@ -35,7 +53,13 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
     api
       .history()
       .then((r) => {
-        if (id === latest.current) setState({ status: "ready", items: r.items });
+        if (id !== latest.current) return;
+        const previous = seen.current;
+        const fresh = new Set(
+          previous ? r.items.filter((i) => !previous.has(i.id)).map((i) => i.id) : [],
+        );
+        seen.current = new Set(r.items.map((i) => i.id));
+        setState({ status: "ready", items: r.items, fresh });
       })
       .catch((e: unknown) => {
         if (id !== latest.current) return;
@@ -58,81 +82,109 @@ export function HistoryPanel({ refreshKey, onSelect, onSessionExpired }: Props) 
     };
   }, [load, refreshKey]);
 
+  const columns: DataTableColumn<HistoryItem>[] = [
+    {
+      key: "route",
+      header: "Маршрут",
+      rowHeader: true,
+      render: (item) => (
+        <button type="button" onClick={() => onSelect(item)} className={BUTTON}>
+          {routeLabel(item)}
+        </button>
+      ),
+    },
+    {
+      key: "date",
+      header: "Дата вылета",
+      render: (item) => formatDate(item.date),
+    },
+    {
+      key: "price",
+      header: "Цена",
+      numeric: true,
+      render: (item) => formatRub(item.price),
+    },
+    {
+      key: "wants",
+      header: "Желают",
+      numeric: true,
+      render: (item) => formatInt(displayWants(item.wants)),
+    },
+    {
+      key: "buys",
+      header: "Купят",
+      numeric: true,
+      render: (item) => formatInt(item.buys),
+    },
+    {
+      key: "time",
+      header: "Время",
+      className: "text-board-ink-2",
+      render: (item) => formatDateTime(item.created_at),
+    },
+  ];
+
   return (
-    <section aria-labelledby="history-title" className="grid gap-3">
-      <h2 id="history-title" className="text-lg font-semibold">
+    <Board as="section" aria-labelledby="history-title">
+      <h2 id="history-title" className="mb-3 text-lg font-medium">
         История расчётов
       </h2>
-      {state.status === "loading" ? <div className="skeleton" aria-busy="true" /> : null}
+      {state.status === "loading" ? <Skeleton variant="board" rows={3} /> : null}
       {state.status === "error" ? (
-        <div role="alert" className="grid justify-items-start gap-3">
-          <p>{state.message}</p>
-          <button type="button" onClick={load} className={SECONDARY}>
-            Повторить
-          </button>
-        </div>
+        <Notice tone="error" surface="board" onRetry={load}>
+          {state.message}
+        </Notice>
       ) : null}
       {state.status === "ready" && state.items.length === 0 ? (
-        <p className="text-sm text-muted">
-          Пока нет расчётов. Рассчитайте первый — он появится здесь.
-        </p>
+        <div className="grid gap-3">
+          <div aria-hidden="true" className="flex gap-1">
+            {BLANK_CELLS.map((key) => (
+              <FlapCell key={key} char=" " tone="blank" size="sm" />
+            ))}
+          </div>
+          <p className="text-sm text-board-ink-2">
+            Пока нет расчётов. Рассчитайте первый — он появится здесь.
+          </p>
+        </div>
       ) : null}
       {state.status === "ready" && state.items.length > 0 ? (
         <>
-          <table className="hidden w-full border-collapse text-sm md:table">
-            <thead>
-              <tr className="border-b border-border text-left text-muted">
-                <th className="py-2 pr-3 font-medium">Маршрут</th>
-                <th className="py-2 pr-3 font-medium">Дата вылета</th>
-                <th className="py-2 pr-3 text-right font-medium">Цена</th>
-                <th className="py-2 pr-3 text-right font-medium">Желают</th>
-                <th className="py-2 pr-3 text-right font-medium">Купят</th>
-                <th className="py-2 font-medium">Время</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.items.map((item) => (
-                <tr key={item.id} className="border-b border-border tabular-nums">
-                  <td className="py-1 pr-3">
-                    <button
-                      type="button"
-                      onClick={() => onSelect(item)}
-                      className={`min-h-11 cursor-pointer text-left font-medium text-accent underline-offset-2 hover:underline ${FOCUS}`}
-                    >
-                      {routeLabel(item)}
-                    </button>
-                  </td>
-                  <td className="py-1 pr-3">{formatDate(item.date)}</td>
-                  <td className="py-1 pr-3 text-right">{formatRub(item.price)}</td>
-                  <td className="py-1 pr-3 text-right">{formatInt(displayWants(item.wants))}</td>
-                  <td className="py-1 pr-3 text-right">{formatInt(item.buys)}</td>
-                  <td className="py-1 text-muted">{formatDateTime(item.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            variant="board"
+            className="hidden md:table"
+            columns={columns}
+            rows={state.items}
+            rowKey={(item) => item.id}
+            rowProps={(item, i) => flipProps(state.fresh, item.id, i)}
+          />
           <ul className="grid gap-2 md:hidden">
-            {state.items.map((item) => (
-              <li key={item.id}>
+            {state.items.map((item, i) => (
+              <li
+                key={item.id}
+                className="rounded-cell border border-board-line"
+                {...flipProps(state.fresh, item.id, i)}
+              >
                 <button
                   type="button"
                   onClick={() => onSelect(item)}
-                  className={`grid min-h-11 w-full cursor-pointer gap-1 rounded-xl border border-border bg-surface p-3 text-left ${FOCUS}`}
+                  className="grid min-h-11 w-full cursor-pointer gap-1 p-3 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-board-focus"
                 >
                   <span className="font-medium">{routeLabel(item)}</span>
-                  <span className="text-sm text-muted">
+                  <span className="text-sm text-board-ink-2">
                     {formatDate(item.date)} · {formatRub(item.price)}
                   </span>
-                  <span className="text-sm tabular-nums">
+                  <span className="font-mono text-sm tabular-nums">
                     Желают {formatInt(displayWants(item.wants))} · купят {formatInt(item.buys)}
                   </span>
-                  <span className="text-xs text-muted">{formatDateTime(item.created_at)}</span>
+                  <span className="text-xs text-board-ink-2">
+                    {formatDateTime(item.created_at)}
+                  </span>
                 </button>
               </li>
             ))}
           </ul>
         </>
       ) : null}
-    </section>
+    </Board>
   );
 }
