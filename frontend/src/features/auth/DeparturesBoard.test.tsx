@@ -90,7 +90,7 @@ describe("DeparturesBoard", () => {
       );
     expect(chars(dataRows()[0], 0)).toEqual(["A", "E", "R"]);
     expect(chars(dataRows()[0], 1)).toEqual(["9", "0", "0", "0"]);
-    expect(container.querySelector(".flap-cell--flipping")).toBeNull();
+    expect(container.querySelector(".flap-leaf")).toBeNull();
     spy.mockRestore();
   });
 

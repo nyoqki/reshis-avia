@@ -273,6 +273,7 @@ describe("index.css structure", () => {
       "--stagger-flap",
       "--duration-grow",
       "--duration-fast",
+      "--duration-step",
     ]) {
       expect(block, token).toMatch(new RegExp(`${token}\\s*:`));
     }
@@ -281,6 +282,8 @@ describe("index.css structure", () => {
     expect(block).toMatch(/--stagger-flap\s*:\s*45ms/);
     expect(block).toMatch(/--duration-grow\s*:\s*600ms/);
     expect(block).toMatch(/--duration-fast\s*:\s*150ms/);
+    // one flap of a cycling cell; mirrors FLAP_STEP_MS
+    expect(block).toMatch(/--duration-step\s*:\s*60ms/);
     expect(block).toMatch(/--ease-flap\s*:\s*cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\)/);
     expect(block).toMatch(/--radius-cell\s*:\s*2px/);
     expect(block).toMatch(/--spacing\s*:\s*0\.25rem/);

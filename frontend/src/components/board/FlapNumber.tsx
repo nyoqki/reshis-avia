@@ -46,14 +46,7 @@ export function FlapNumber({
             {g > 0 && <span className="flap-gap" />}
             {Array.from({ length: run.length }, (_, j) => {
               const i = starts[g] + j;
-              return (
-                <FlapCell
-                  key={`cell-${i}`}
-                  char={shown[i]}
-                  size={size}
-                  flipping={shown[i] !== target[i]}
-                />
-              );
+              return <FlapCell key={`cell-${i}`} char={shown[i]} size={size} />;
             })}
           </Fragment>
         ))}

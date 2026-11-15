@@ -84,6 +84,8 @@
   --stagger-flap: 45ms;
   --duration-grow: 600ms;
   --duration-fast: 150ms;
+  /* one flap of a cycling cell; mirrors FLAP_STEP_MS */
+  --duration-step: 60ms;
 }
 
 :root {

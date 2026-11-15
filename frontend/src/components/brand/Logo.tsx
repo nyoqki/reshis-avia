@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useReducedMotion } from "../../lib/motion";
 import { claimOnce } from "../../lib/once";
 import "./logo.css";
@@ -15,6 +15,13 @@ const PART_CLASS: Record<string, string> = {
   "hinge-on-letter": "fill-bar",
   leaf: "fill-sign-hover",
 };
+
+// Where the two halves of a tile are clipped, in viewBox units. Each half ends on the far edge of the
+// hinge band, so they overlap on the hinge and no seam shows between them; the lower half falls around
+// the hinge in the intro (logo.css).
+const HALVES = ["top", "bottom"] as const;
+const HEADER_CLIP = { width: 269, height: 32, top: 16.5, bottom: 15.5 };
+const HERO_CLIP = { width: 553, height: 100, top: 50.7, bottom: 49.3 };
 
 const HEADER_VIEWBOX = "0 0 269 32";
 const HEADER_TILES: readonly (readonly Part[])[] = [
@@ -213,9 +220,12 @@ export function Logo({ size = "header", intro = true, className }: LogoProps): R
   // intro still plays once. claimOnce is only reached when the intro is wanted.
   const [claimed] = useState(() => intro && claimOnce(`logo-intro-${size}`));
   const play = intro && claimed && !reduced;
+  // clip ids must be unique per logo on the page; useId's punctuation is not needed in them
+  const clipId = `logo-${useId().replace(/[^\w-]/g, "")}`;
   const hero = size === "hero";
   const tiles = hero ? HERO_TILES : HEADER_TILES;
   const word = hero ? HERO_WORD : HEADER_WORD;
+  const clip = hero ? HERO_CLIP : HEADER_CLIP;
   return (
     <span
       role="img"
@@ -230,6 +240,14 @@ export function Logo({ size = "header", intro = true, className }: LogoProps): R
         viewBox={hero ? HERO_VIEWBOX : HEADER_VIEWBOX}
         className="logo-svg"
       >
+        <defs>
+          <clipPath id={`${clipId}-top`}>
+            <rect x={0} y={0} width={clip.width} height={clip.top} />
+          </clipPath>
+          <clipPath id={`${clipId}-bottom`}>
+            <rect x={0} y={clip.bottom} width={clip.width} height={clip.height - clip.bottom} />
+          </clipPath>
+        </defs>
         {tiles.map((parts, i) => (
           <g
             key={parts[0][1]}
@@ -237,8 +255,17 @@ export function Logo({ size = "header", intro = true, className }: LogoProps): R
             className="logo-tile"
             style={{ "--tile": i } as React.CSSProperties}
           >
-            {parts.map(([part, d]) => (
-              <path key={part + d} data-part={part} className={PART_CLASS[part]} d={d} />
+            {HALVES.map((half) => (
+              <g
+                key={half}
+                data-half={half}
+                className={`logo-half-${half}`}
+                clipPath={`url(#${clipId}-${half})`}
+              >
+                {parts.map(([part, d]) => (
+                  <path key={part + d} data-part={part} className={PART_CLASS[part]} d={d} />
+                ))}
+              </g>
             ))}
           </g>
         ))}

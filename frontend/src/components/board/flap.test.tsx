@@ -4,6 +4,7 @@ import { formatInt } from "../../lib/format";
 import { FLAP_SETTLE_MS, FLAP_STAGGER_MS } from "../../lib/motion";
 import boardCss from "../../styles/board.css?raw";
 import { Board } from "./Board";
+import { FlapCell } from "./FlapCell";
 import { FlapNumber } from "./FlapNumber";
 import { FlapText } from "./FlapText";
 
@@ -185,5 +186,90 @@ describe("Board", () => {
     expect(boardCss).toMatch(
       /\.board\s*\{[^}]*--color-focus:\s*var\(--color-board-focus\)\s*;?[^}]*\}/,
     );
+  });
+});
+
+describe("FlapCell", () => {
+  it("TB-AC10: a new character drops a new lower leaf onto the old one, and the upper half shows it at once", () => {
+    const { container, rerender } = render(<FlapCell char="А" />);
+    const cell = container.firstElementChild as HTMLElement;
+    expect(cell.dataset.char).toBe("А");
+    expect(cell.dataset.prev).toBe("А");
+    expect(cell.querySelector(".flap-leaf")).toBeNull();
+
+    rerender(<FlapCell char="Б" />);
+    expect(cell.dataset.char).toBe("Б");
+    expect(cell.dataset.prev).toBe("А");
+    const first = cell.querySelectorAll<HTMLElement>(".flap-leaf");
+    expect(first).toHaveLength(1);
+    expect(first[0].dataset.glyph).toBe("Б");
+    // the leaf is not a cell of its own and carries no text node
+    expect(first[0].hasAttribute("data-char")).toBe(false);
+    expect(cell.textContent).toBe("");
+
+    rerender(<FlapCell char="В" />);
+    expect(cell.dataset.prev).toBe("Б");
+    const second = cell.querySelectorAll<HTMLElement>(".flap-leaf");
+    expect(second).toHaveLength(1);
+    expect(second[0].dataset.glyph).toBe("В");
+    // a fresh element per change restarts the fall
+    expect(second[0]).not.toBe(first[0]);
+  });
+
+  it("TB-AC10: the same character again drops no new leaf", () => {
+    const { container, rerender } = render(<FlapCell char="А" />);
+    rerender(<FlapCell char="Б" />);
+    const leaf = container.querySelector(".flap-leaf");
+    rerender(<FlapCell char="Б" />);
+    expect(container.querySelector(".flap-leaf")).toBe(leaf);
+  });
+});
+
+describe("board.css flap motion", () => {
+  // the bodies of every rule whose selector list names `selector` (comments dropped first)
+  const rule = (selector: string) => {
+    const css = boardCss.replace(/\/\*[\s\S]*?\*\//g, "");
+    const body = Array.from(css.matchAll(/([^{}]+)\{([^{}]*)\}/g))
+      .filter((m) => m[1].split(",").some((s) => s.trim() === selector))
+      .map((m) => m[2])
+      .join("\n");
+    expect(body, selector).not.toBe("");
+    return body;
+  };
+  const keyframes = (name: string) => {
+    const m = boardCss.match(new RegExp(`@keyframes ${name}\\s*\\{([\\s\\S]*?)\\n\\}`));
+    expect(m, name).not.toBeNull();
+    return m?.[1] ?? "";
+  };
+
+  it("TB-AC10: the upper leaf never moves", () => {
+    expect(rule(".flap-cell::before")).not.toMatch(/animation|transform/);
+    expect(boardCss).not.toMatch(/::before[^{]*\{[^}]*animation/);
+  });
+
+  it("TB-AC10: only the lower leaf moves: it falls from the hinge, edge-on to flat, in one step", () => {
+    const leaf = rule(".flap-leaf");
+    expect(leaf).toMatch(/animation:\s*flap-fall\s+var\(--duration-step\)/);
+    expect(leaf).toMatch(/transform-origin:\s*50% 50%/);
+    expect(leaf).toMatch(/clip-path:\s*inset\(calc\(50% \+ var\(--flap-hinge\)\) 0 0 0\)/);
+    const fall = keyframes("flap-fall");
+    expect(fall).toMatch(/from\s*\{[^}]*rotateX\(90deg\)/);
+    expect(fall).toMatch(/to\s*\{[^}]*rotateX\(0deg\)/);
+  });
+
+  it("TB-AC10: the lower leaf under the falling one keeps the previous character", () => {
+    expect(rule(".flap-cell::after")).toMatch(/content:\s*attr\(data-prev\)/);
+    expect(rule(".flap-leaf::before")).toMatch(/content:\s*attr\(data-glyph\)/);
+  });
+
+  it("TB-AC16: reduced motion stops the falling leaf", () => {
+    const reduced = boardCss.slice(boardCss.indexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toMatch(/\.flap-leaf[^{]*\{[^}]*animation:\s*none/);
+  });
+
+  it("TB-AC10: a row comes in without turning: its entrance animates opacity only", () => {
+    const name = rule("[data-row-flip]").match(/animation:\s*([\w-]+)/)?.[1] ?? "";
+    expect(name).not.toBe("");
+    expect(keyframes(name)).not.toMatch(/rotate|transform/);
   });
 });

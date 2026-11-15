@@ -13,6 +13,8 @@
    32 px from Tailwind's sm breakpoint */
 .logo[data-size="header"] {
   height: calc(var(--spacing) * 6);
+  /* the tiles' hinge line in viewBox units: the lower half of a tile falls around it */
+  --logo-hinge: 16px;
 }
 
 @media (width >= 40rem) {
@@ -23,25 +25,38 @@
 
 .logo[data-size="hero"] {
   height: calc(var(--spacing) * 16);
+  --logo-hinge: 50px;
 }
 
-.logo-tile {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.logo[data-intro="true"] .logo-tile {
-  animation: logo-flip var(--duration-flap) var(--ease-flap) both;
+/* Intro, staggered by --tile: the upper half of a tile shows at once and only the lower half moves,
+   falling from the hinge like a flap of the board. Opacity and transform only; the backwards fill
+   hides a tile until its turn and leaves no transform behind. */
+.logo[data-intro="true"] .logo-half-top {
+  animation: logo-show var(--duration-flap) step-start backwards;
   animation-delay: calc(var(--tile) * var(--stagger-flap));
 }
 
-@keyframes logo-flip {
+.logo[data-intro="true"] .logo-half-bottom {
+  transform-box: view-box;
+  transform-origin: 0 var(--logo-hinge);
+  animation: logo-fall var(--duration-flap) var(--ease-flap) backwards;
+  animation-delay: calc(var(--tile) * var(--stagger-flap));
+}
+
+@keyframes logo-show {
   from {
     opacity: 0;
-    transform: scaleY(0);
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes logo-fall {
+  from {
+    transform: scaleY(0);
+  }
+  to {
     transform: scaleY(1);
   }
 }

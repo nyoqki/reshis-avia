@@ -1,7 +1,9 @@
 /*
- * Split-flap board. Cells carry no text: both leaves draw the glyph from data-char, the top leaf
- * clipped to the upper half, the bottom leaf to the lower half, and the slot colour shows through
- * the hinge gap between them. Motion is transform-only. Token variables only.
+ * Split-flap board. Cells carry no text: the leaves draw their glyphs from data attributes, the top
+ * leaf clipped to the upper half, the bottom leaves to the lower half, and the slot colour shows
+ * through the hinge gap between them. Only the lower half moves: the top leaf shows a new character
+ * at once, and a new bottom leaf falls from the hinge onto the previous one. Motion is transform
+ * and opacity only. Token variables only.
  */
 
 /* the board is dark in both themes, so its focus ring is always yellow */
@@ -38,6 +40,8 @@
   --flap-hinge: max(1px, 0.04em);
 
   position: relative;
+  /* keeps the falling leaf's z-index inside the cell */
+  isolation: isolate;
   display: inline-block;
   flex: none;
   width: 0.8em;
@@ -58,8 +62,8 @@
 }
 
 .flap-cell::before,
-.flap-cell::after {
-  content: attr(data-char);
+.flap-cell::after,
+.flap-leaf::before {
   position: absolute;
   inset: 0;
   display: flex;
@@ -69,58 +73,75 @@
   white-space: pre;
 }
 
-/* a blank cell keeps its leaves but shows no glyph */
-.flap-cell[data-tone="blank"]::before,
-.flap-cell[data-tone="blank"]::after {
-  content: "";
-}
-
-/* top leaf: lit from above, folds down around the hinge */
+/* top leaf: lit from above; shows a new character at once and never moves */
 .flap-cell::before {
+  content: attr(data-char);
   background: linear-gradient(to bottom, var(--flap-leaf-hi), var(--flap-leaf));
   clip-path: inset(0 0 50% 0);
-  transform-origin: 50% 50%;
 }
 
-/* bottom leaf: starts below the hinge gap, shaded at its lower edge */
-.flap-cell::after {
+/* bottom leaves: below the hinge gap, shaded at the lower edge */
+.flap-cell::after,
+.flap-leaf {
   background: linear-gradient(to bottom, var(--flap-leaf) 80%, var(--flap-leaf-hi));
   clip-path: inset(calc(50% + var(--flap-hinge)) 0 0 0);
   box-shadow: inset 0 calc(var(--flap-hinge) * -1) 0 var(--color-board);
 }
 
-.flap-cell--flipping::before {
-  animation: flap-flip var(--duration-fast) var(--ease-flap) infinite;
+/* the bottom leaf keeps the previous character until the falling leaf lands on it */
+.flap-cell::after {
+  content: attr(data-prev);
 }
 
-@keyframes flap-flip {
+/* the falling leaf: the new character's lower half, mounted once per change, drops from the hinge */
+.flap-leaf {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  transform-origin: 50% 50%;
+  /* no fill: once flat, the leaf drops its transform and its compositing layer */
+  animation: flap-fall var(--duration-step) var(--ease-flap);
+}
+
+.flap-leaf::before {
+  content: attr(data-glyph);
+}
+
+/* a blank cell keeps its leaves but shows no glyph */
+.flap-cell[data-tone="blank"]::before,
+.flap-cell[data-tone="blank"]::after,
+.flap-cell[data-tone="blank"] .flap-leaf::before {
+  content: "";
+}
+
+/* from edge-on, pointing at the viewer, to flat over the old lower half */
+@keyframes flap-fall {
   from {
-    transform: perspective(4em) rotateX(0deg);
+    transform: perspective(4em) rotateX(90deg);
   }
   to {
-    transform: perspective(4em) rotateX(-90deg);
+    transform: perspective(4em) rotateX(0deg);
   }
 }
 
-/* A departures row flips in: transform and opacity only, staggered by --row (set inline). */
+/* A row comes in, staggered by --row (set inline): opacity only, the flap cells in it do the turning. */
 [data-row-flip] {
-  animation: board-row-flip var(--duration-flap) var(--ease-flap) both;
+  animation: board-row-in var(--duration-flap) var(--ease-flap) both;
   animation-delay: calc(var(--row, 0) * var(--stagger-flap));
 }
 
-@keyframes board-row-flip {
+@keyframes board-row-in {
   from {
     opacity: 0;
-    transform: perspective(40em) rotateX(-70deg);
   }
   to {
     opacity: 1;
-    transform: perspective(40em) rotateX(0deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flap-cell--flipping::before,
+  .flap-leaf,
   [data-row-flip] {
     animation: none;
   }

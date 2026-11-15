@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-/** One flip of a cell while it cycles through the alphabet. */
+/** One flip of a cell while it cycles through the alphabet; mirrors --duration-step. */
 export const FLAP_STEP_MS = 60;
 /** Delay between neighbouring cells settling; mirrors --stagger-flap. */
 export const FLAP_STAGGER_MS = 45;

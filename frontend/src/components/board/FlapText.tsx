@@ -36,13 +36,7 @@ export function FlapText({
       <span className="sr-only">{srText ?? text}</span>
       <span aria-hidden="true" className="flap-row">
         {keys.map((key, i) => (
-          <FlapCell
-            key={key}
-            char={shown[i]}
-            tone={tone}
-            size={size}
-            flipping={shown[i] !== target[i]}
-          />
+          <FlapCell key={key} char={shown[i]} tone={tone} size={size} />
         ))}
       </span>
     </span>

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resetOnceForTests } from "../../lib/once";
 import { Logo } from "./Logo";
 import logoSource from "./Logo.tsx?raw";
+import logoCss from "./logo.css?raw";
 
 const original = window.matchMedia;
 
@@ -86,5 +87,58 @@ describe("Logo", () => {
     for (const el of tileShapes) expect(el.getAttribute("class")).toContain("fill-sign");
     for (const el of letterShapes) expect(el.getAttribute("class")).toContain("fill-sign-ink");
     expect(logoSource).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|oklch\(|oklab\(/);
+  });
+  it("TB-AC7: each tile is split at the hinge into an upper and a lower half, each clipped by a clipPath of the svg", () => {
+    const { container } = render(<Logo size="hero" />);
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    const tiles = Array.from(container.querySelectorAll("[data-tile]"));
+    expect(tiles).toHaveLength(6);
+    for (const tile of tiles) {
+      const halves = Array.from(tile.children).map((h) => h.getAttribute("data-half"));
+      expect(halves).toEqual(["top", "bottom"]);
+    }
+    const clip = (half: string) => {
+      const ref = tiles[0].querySelector(`[data-half="${half}"]`)?.getAttribute("clip-path") ?? "";
+      const id = ref.match(/^url\(#(.+)\)$/)?.[1] ?? "";
+      const path = svg.querySelector(`[id="${id}"]`);
+      expect(path?.localName, half).toBe("clipPath");
+      const rect = path?.querySelector("rect");
+      return { y: Number(rect?.getAttribute("y")), h: Number(rect?.getAttribute("height")) };
+    };
+    // hero tiles are 100 units tall with the hinge band at 49.3–50.7: the halves meet on it
+    const top = clip("top");
+    const bottom = clip("bottom");
+    expect(top.y).toBe(0);
+    expect(top.y + top.h).toBeGreaterThanOrEqual(49.3);
+    expect(top.y + top.h).toBeLessThanOrEqual(50.7);
+    expect(bottom.y).toBeGreaterThanOrEqual(49.3);
+    expect(bottom.y).toBeLessThanOrEqual(50.7);
+    expect(bottom.y + bottom.h).toBeGreaterThanOrEqual(100);
+  });
+
+  it("TB-AC7/TB-AC10: in the intro only the lower half moves: the upper half shows at once, the lower falls from the hinge", () => {
+    const block = (selector: string) => {
+      const at = logoCss.indexOf(`${selector} {`);
+      expect(at, selector).toBeGreaterThanOrEqual(0);
+      return logoCss.slice(at, logoCss.indexOf("}", at));
+    };
+    expect(block('.logo[data-intro="true"] .logo-half-top')).toMatch(
+      /animation:\s*logo-show\s+var\(--duration-flap\)\s+step-start/,
+    );
+    const bottom = block('.logo[data-intro="true"] .logo-half-bottom');
+    expect(bottom).toMatch(/animation:\s*logo-fall\s/);
+    expect(bottom).toMatch(/transform-box:\s*view-box/);
+    expect(bottom).toMatch(/transform-origin:\s*0 var\(--logo-hinge\)/);
+    expect(logoCss).toMatch(
+      /@keyframes logo-fall\s*\{\s*from\s*\{\s*transform:\s*scaleY\(0\);\s*\}\s*to\s*\{\s*transform:\s*scaleY\(1\);\s*\}/,
+    );
+    expect(logoCss).toMatch(
+      /@keyframes logo-show\s*\{\s*from\s*\{\s*opacity:\s*0;\s*\}\s*to\s*\{\s*opacity:\s*1;\s*\}/,
+    );
+    // the whole tile no longer turns
+    expect(logoCss).not.toMatch(/\.logo-tile\s*\{[^}]*animation/);
+    // the hinge in viewBox units: header tiles are 32 tall, hero tiles 100
+    expect(block('.logo[data-size="header"]')).toMatch(/--logo-hinge:\s*16px/);
+    expect(block('.logo[data-size="hero"]')).toMatch(/--logo-hinge:\s*50px/);
   });
 });
