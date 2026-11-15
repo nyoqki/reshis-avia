@@ -11,13 +11,13 @@
       }
       canvas {
         display: block;
-        width: 1200px;
-        height: 900px;
+        width: 1280px;
+        height: 560px;
       }
     </style>
   </head>
   <body data-state="loading">
-    <canvas id="plane" width="1200" height="900"></canvas>
+    <canvas id="plane" width="1280" height="560"></canvas>
     <script type="module">
       import { mountPlaneScene } from "/src/features/auth/plane/scene.ts";
 
@@ -31,7 +31,7 @@
             document.body.dataset.state = "ready";
           },
         });
-        handle.resize(1200, 900);
+        handle.resize(1280, 560);
         handle.start();
       } catch (error) {
         document.body.dataset.error = String(error);

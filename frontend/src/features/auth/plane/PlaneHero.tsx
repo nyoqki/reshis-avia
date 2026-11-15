@@ -5,9 +5,13 @@ import { useReducedMotion } from "../../../lib/motion";
 import type { PlaneSceneHandle } from "./scene";
 import { webglAvailable } from "./webgl";
 
-/** Size of the committed still (scripts/render-plane-still.mjs renders it at 1200×900). */
-const STILL_WIDTH = 1200;
-const STILL_HEIGHT = 900;
+/**
+ * Size of the committed still (scripts/render-plane-still.mjs renders it at 1280×560). The box has
+ * the same 16:7 ratio at every width (PLANE_ASPECT in scene.ts frames the plane for it), so the
+ * still fills it edge to edge and the canvas fades in over the same picture.
+ */
+const STILL_WIDTH = 1280;
+const STILL_HEIGHT = 560;
 /** Below this width the hero stays on the still image (OQ1). */
 const WIDE_QUERY = "(min-width: 768px)";
 
@@ -127,7 +131,7 @@ export function PlaneHero({ className }: PlaneHeroProps): React.JSX.Element {
   }, [reducedMotion, wide]);
 
   return (
-    <div ref={boxRef} className={`relative aspect-4/3 w-full ${className ?? ""}`.trim()}>
+    <div ref={boxRef} className={`relative aspect-16/7 w-full ${className ?? ""}`.trim()}>
       <img
         src={still}
         alt=""

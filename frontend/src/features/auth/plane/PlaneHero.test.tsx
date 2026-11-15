@@ -143,6 +143,19 @@ describe("PlaneHero", () => {
     expect(canvasShown(container.querySelector("canvas"))).toBe(false);
   });
 
+  it("TB-AC9: the box has the still's own ratio, so the still fills it edge to edge", () => {
+    const { container } = render(<PlaneHero />);
+    const box = container.firstElementChild as HTMLElement;
+    const img = container.querySelector("img");
+    const match = box.className.match(/(?:^|\s)aspect-(\d+)\/(\d+)(?:\s|$)/);
+    expect(match).not.toBeNull();
+    const ratio = Number(match?.[1]) / Number(match?.[2]);
+    const still = Number(img?.getAttribute("width")) / Number(img?.getAttribute("height"));
+    expect(still).toBeCloseTo(ratio, 3);
+    // The ratio the scene frames the plane for (PLANE_ASPECT in scene.ts).
+    expect(ratio).toBeCloseTo(16 / 7, 3);
+  });
+
   it("TB-AC9/TB-AC16: under reduced motion the scene module is never imported", async () => {
     setMedia({ reduced: true });
     render(<PlaneHero />);

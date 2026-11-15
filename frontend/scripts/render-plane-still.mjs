@@ -25,7 +25,7 @@ try {
   browser = await chromium.launch({
     args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
   });
-  const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 560 } });
   page.on("pageerror", (error) => console.error(`page error: ${error.message}`));
   await page.goto(new URL("scripts/plane-still.html", base).href);
   await page.waitForFunction(() => document.body.dataset.state !== "loading", null, {

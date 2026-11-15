@@ -294,6 +294,17 @@ describe("AuthScreen layout", () => {
     for (const c of canvases) expect(c.dataset.visible).not.toBe("true");
   });
 
+  it("TB-AC9: the plane box keeps the still's ratio at every width", async () => {
+    stubFetch(OPEN);
+    const { container } = render(<AuthScreen onAuthenticated={() => {}} />);
+    await screen.findByLabelText(/^Имя/);
+
+    const box = container.querySelector("img")?.parentElement;
+    expect(box?.className).toMatch(/(?:^|\s)aspect-\d+\/\d+(?:\s|$)/);
+    // A breakpoint ratio would crop or letterbox the still against the canvas frame.
+    expect(box?.className).not.toMatch(/:aspect-/);
+  });
+
   it("TB-AC1: the h1 names the product and precedes the auth card in DOM order", async () => {
     stubFetch(OPEN);
     render(<AuthScreen onAuthenticated={() => {}} />);

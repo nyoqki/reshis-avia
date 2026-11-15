@@ -208,7 +208,7 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
       </div>
 
       <div className="flex min-w-0 flex-col gap-6 lg:order-1 lg:col-span-3">
-        <PlaneHero className="lg:aspect-video" />
+        <PlaneHero />
         <DeparturesBoard />
       </div>
     </div>
