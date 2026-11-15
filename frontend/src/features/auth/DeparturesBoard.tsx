@@ -9,8 +9,7 @@ const COLUMNS: DataTableColumn<Departure>[] = [
     key: "city",
     header: "Куда",
     rowHeader: true,
-    className: "font-medium text-base sm:text-lg",
-    render: (d) => d.city,
+    render: (d) => <span className="text-base font-medium sm:text-lg">{d.city}</span>,
   },
   {
     key: "code",

@@ -363,7 +363,10 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
 
             {/* At a price nobody pays all nine bars are 0: without a word the empty axes look broken. */}
             {model.empty ? (
-              <p className="pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-control border border-board-line bg-flap px-4 py-3 text-center text-sm text-board-ink">
+              <p
+                className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-control border border-board-line bg-flap px-4 py-3 text-center text-sm text-board-ink"
+                style={{ left: plot.x, width: plot.width }}
+              >
                 Спрос нулевой во всех девяти сценариях, поэтому столбиков нет. Снизьте цену, чтобы
                 увидеть распределение.
               </p>

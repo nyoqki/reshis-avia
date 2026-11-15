@@ -1,5 +1,6 @@
 import type { ForecastResponse } from "../../api/types";
 import { Board } from "../../components/board/Board";
+import type { FlapSize } from "../../components/board/FlapCell";
 import { FlapNumber } from "../../components/board/FlapNumber";
 import { FlapText } from "../../components/board/FlapText";
 import { Badge } from "../../components/ui/Badge";
@@ -50,6 +51,7 @@ function Card({
   hint,
   value,
   minCells,
+  size,
   index,
   note,
 }: {
@@ -57,16 +59,18 @@ function Card({
   hint?: TermKey;
   value: number;
   minCells: number;
+  size: FlapSize;
   index: number;
   note?: string;
 }) {
   return (
     <div className="grid content-start gap-2 rounded-cell border border-board-line bg-flap p-4">
-      <span className="flex items-center gap-2 text-sm text-board-ink-2">
+      {/* two lines tall, so the numbers line up when one label wraps and its neighbour does not */}
+      <span className="flex min-h-10 items-start gap-2 text-sm text-board-ink-2">
         {label}
         {hint ? <Hint k={hint} /> : null}
       </span>
-      <FlapNumber value={value} minCells={minCells} delayMs={index * 120} />
+      <FlapNumber value={value} minCells={minCells} size={size} delayMs={index * 120} />
       {note ? <span className="text-sm text-board-ink-2">{note}</span> : null}
     </div>
   );
@@ -81,6 +85,11 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
   const status = STATUS[result.limit];
   const values = [result.seats, displayWants(result.wants), result.buys, result.free_seats];
   const minCells = Math.max(...values.map((v) => String(Math.abs(Math.round(v))).length));
+  // Four digits (1 440 seats) do not fit a quarter of the board at the md cell size: smaller cells,
+  // and four cards in a row only where the board is wide enough for them.
+  const wide = minCells >= 4;
+  const cellSize: FlapSize = wide ? "sm" : "md";
+  const cardGrid = wide ? "grid-cols-2 @2xl:grid-cols-4" : "grid-cols-2 @xl:grid-cols-4";
 
   return (
     <Board
@@ -91,16 +100,18 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
           <h2 id="result-heading" className="text-lg font-semibold">
             Результат прогноза
           </h2>
-          <p className="text-sm text-board-ink-2">
-            {`${result.origin} ${fromCode} → ${result.destination} ${toCode}`}
-          </p>
-          <p className="text-sm text-board-ink-2">{formatDate(result.date)}</p>
-          <p className="text-sm text-board-ink-2">{formatRub(result.price)}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-board-ink-2">
+            <p className="text-board-ink">
+              {`${result.origin} ${fromCode} → ${result.destination} ${toCode}`}
+            </p>
+            <p>{formatDate(result.date)}</p>
+            <p>{formatRub(result.price)}</p>
+          </div>
           <FlapText text={status.text} srText={status.srText} size="sm" />
         </div>
       }
     >
-      <div className="grid gap-4">
+      <div className="@container grid gap-4">
         {/* Above the cards: on a phone the cards fill the screen and a warning under them goes unseen. */}
         {!result.price_in_range ? (
           <Notice tone="warning" surface="board" role="alert">
@@ -108,18 +119,39 @@ export function ResultPanel({ result, onUseRecommended, pending = false }: Props
           </Notice>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card label="Мест в самолёте" value={values[0]} minCells={minCells} index={0} />
+        <div className={`grid gap-3 ${cardGrid}`}>
+          <Card
+            label="Мест в самолёте"
+            value={values[0]}
+            minCells={minCells}
+            size={cellSize}
+            index={0}
+          />
           <Card
             label="Желают купить"
             hint="wants"
             value={values[1]}
             minCells={minCells}
+            size={cellSize}
             index={1}
             note={negative ? `по формуле: ${formatSigned(raw)}` : undefined}
           />
-          <Card label="Купят" hint="buys" value={values[2]} minCells={minCells} index={2} />
-          <Card label="Свободно" hint="free" value={values[3]} minCells={minCells} index={3} />
+          <Card
+            label="Купят"
+            hint="buys"
+            value={values[2]}
+            minCells={minCells}
+            size={cellSize}
+            index={2}
+          />
+          <Card
+            label="Свободно"
+            hint="free"
+            value={values[3]}
+            minCells={minCells}
+            size={cellSize}
+            index={3}
+          />
         </div>
 
         <p className="text-sm">{EXPLANATIONS[result.limit]}</p>

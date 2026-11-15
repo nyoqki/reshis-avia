@@ -2,11 +2,12 @@ import type { InputHTMLAttributes, Ref, SelectHTMLAttributes } from "react";
 
 const BASE =
   "min-h-11 w-full rounded-control border border-line-strong bg-paper-raised px-3 py-2 text-base text-ink " +
-  "read-only:bg-paper-sunken disabled:cursor-not-allowed disabled:opacity-60 " +
-  "aria-[invalid=true]:border-danger";
+  "disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger";
+/** Text-like inputs only: `:read-only` also matches every <select>, which is never read-only. */
+const TEXT = `${BASE} read-only:bg-paper-sunken`;
 
-function join(className: string | undefined) {
-  return className ? `${BASE} ${className}` : BASE;
+function join(className: string | undefined, base = TEXT) {
+  return className ? `${base} ${className}` : base;
 }
 
 /** Text-like input. Pair with Field; `readOnly` uses the sunken paper. */
@@ -24,7 +25,7 @@ export function Select({
   ref,
   ...rest
 }: SelectHTMLAttributes<HTMLSelectElement> & { ref?: Ref<HTMLSelectElement> }) {
-  return <select {...rest} ref={ref} className={join(className)} />;
+  return <select {...rest} ref={ref} className={join(className, BASE)} />;
 }
 
 /** Native date input (`type="date"`, value as YYYY-MM-DD). Pair with Field. */

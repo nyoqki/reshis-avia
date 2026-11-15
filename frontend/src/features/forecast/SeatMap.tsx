@@ -75,7 +75,7 @@ export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element
           </>
         )}
       </svg>
-      <p className="mt-2 text-board-ink-2">
+      <p className="mt-2 text-sm text-board-ink-2">
         {`Занято ${formatInt(taken)} из ${formatInt(seats)} мест · свободно ${formatInt(seats - taken)}`}
         {queue.count > 0 && ` · Без места остаются: ${formatInt(queue.count)}`}
       </p>
