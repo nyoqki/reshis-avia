@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthOptions, UserOut } from "../../api/types";
 import { AppHeader } from "../../components/AppHeader";
+import { looseSpaces } from "../../test/typography";
 import { AuthScreen } from "./AuthScreen";
 
 type Handler = (url: string, init?: RequestInit) => Response | Promise<Response>;
@@ -52,6 +53,13 @@ describe("AuthScreen demo entry", () => {
 
     expect(await screen.findByRole("button", { name: "Войти в демо-аккаунт" })).toBeInTheDocument();
     expect(screen.getByText(/общий/i)).toBeVisible();
+  });
+
+  it("TB-AC20: the shared-account note binds its short words, so «в» never ends a line", async () => {
+    stubFetch(OPEN);
+    render(<AuthScreen onAuthenticated={() => {}} />);
+    const note = await screen.findByText(/Аккаунт общий/);
+    expect(looseSpaces(note.textContent ?? "")).toEqual([]);
   });
 
   it("AC2: hides the demo button when demo is disabled", async () => {

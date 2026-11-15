@@ -201,7 +201,7 @@ export function AuthScreen({ onAuthenticated, sessionExpired = false }: Props) {
               Войти в демо-аккаунт
             </Button>
             <p className="text-sm text-ink-2">
-              Аккаунт общий: расчёты и история видны всем, кто в него входит.
+              {"Аккаунт общий: расчёты и\u00a0история видны всем, кто в\u00a0него входит."}
             </p>
           </div>
         ) : null}
