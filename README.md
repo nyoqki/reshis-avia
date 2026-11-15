@@ -9,7 +9,7 @@
 
 Автор: Lars Johnson
 
-- Живой адрес: **https://reshis.207-2-120-48.sslip.io**, документация API — https://reshis.207-2-120-48.sslip.io/docs
+- Живой адрес: **https://reshis.jiraya.ru**, документация API — https://reshis.jiraya.ru/docs
 - Демо-доступ: см. раздел «Демо-доступ».
 
 ## Вариант C и четыре дополнительные функции

@@ -45,14 +45,14 @@ describe("index.html brand head", () => {
     expect(content("property", "og:site_name")).toBe("Решись Авиа");
     expect((content("property", "og:title") ?? "").length).toBeGreaterThan(0);
     expect((content("property", "og:description") ?? "").length).toBeGreaterThan(0);
-    expect(content("property", "og:url")).toBe("https://reshis.207-2-120-48.sslip.io/");
+    expect(content("property", "og:url")).toBe("https://reshis.jiraya.ru/");
     expect((content("property", "og:image:alt") ?? "").length).toBeGreaterThan(0);
     expect(content("name", "twitter:card")).toBe("summary_large_image");
   });
 
   it("points og:image at an absolute https og.png of 1200x630", () => {
     const image = content("property", "og:image");
-    expect(image).toMatch(/^https:\/\/.+\/og\.png$/);
+    expect(image).toBe("https://reshis.jiraya.ru/og.png");
     expect(content("property", "og:image:width")).toBe("1200");
     expect(content("property", "og:image:height")).toBe("630");
   });
