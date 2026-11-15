@@ -1,7 +1,8 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { formatInt } from "../../lib/format";
 import { useReducedMotion } from "../../lib/motion";
+import { HATCH_OUTLINE, HatchPattern } from "./Hatch";
 import { seatLayout } from "./seatLayout";
 import "./seatmap.css";
 
@@ -13,12 +14,24 @@ export interface SeatMapProps {
 
 /** jsdom and the first render before a measurement have no width. */
 const FALLBACK_WIDTH = 320;
-const LABEL_SIZE = 12;
+/** Room for the 1.5 px outline around the queue block. */
+const OUTLINE_PAD = 1;
+
+/** Inline legend square in front of a caption part. */
+function Swatch({ className }: { className: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`mr-2 inline-block size-3 rounded-cell align-middle ${className}`}
+    />
+  );
+}
 
 export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(FALLBACK_WIDTH);
   const reduced = useReducedMotion();
+  const hatchId = `seatmap-hatch-${useId().replace(/[^\w-]/g, "")}`;
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -40,14 +53,16 @@ export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element
   );
   const taken = Math.min(buys, seats);
   const { queue } = layout;
-  const cabinHeight = layout.rows * (layout.unit + layout.gap) - layout.gap;
-  const gateY = cabinHeight + 3;
-  const labelX = queue.shown * (Math.min(layout.unit, 12) + layout.gap) + 4;
+  const queueBox = {
+    width: queue.width + OUTLINE_PAD * 2,
+    height: queue.height + OUTLINE_PAD * 2,
+  };
 
-  // min-w-0: as a grid item the figure has to shrink below the svg it last drew, or a narrower
-  // board is never measured and the map overflows it.
+  // Taken seats are a calm grey and free ones a quiet cell: the yellow is kept for the people who
+  // get no seat, hatched like «Не хватит мест» on the chart. min-w-0: as a grid item the figure has
+  // to shrink below the svg it last drew, or a narrower board is never measured.
   return (
-    <figure ref={ref} className="m-0 min-w-0">
+    <figure ref={ref} className="m-0 grid min-w-0 gap-3">
       <svg
         aria-hidden="true"
         focusable="false"
@@ -56,30 +71,32 @@ export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         className={reduced ? "block max-w-full" : "seatmap-anim block max-w-full"}
       >
-        <path className="seatmap-filled fill-sign" d={layout.filledPath} />
-        <path className="fill-none stroke-board-ink-2" strokeWidth={1} d={layout.freePath} />
-        {queue.count > 0 && (
-          <>
-            <line
-              className="stroke-board-ink-2"
-              strokeWidth={1}
-              x1={0}
-              x2={layout.width}
-              y1={gateY}
-              y2={gateY}
-            />
-            <path className="fill-sign" d={queue.path} />
-            {queue.more > 0 && (
-              <text className="fill-board-ink-2" x={labelX} y={layout.height} fontSize={LABEL_SIZE}>
-                {`+${queue.more}`}
-              </text>
-            )}
-          </>
-        )}
+        <path className="seatmap-filled fill-bar" d={layout.filledPath} />
+        <path className="fill-flap-hi" d={layout.freePath} />
       </svg>
-      <p className="mt-2 text-sm text-board-ink-2">
-        {`Занято ${formatInt(taken)} из ${formatInt(seats)} мест · свободно ${formatInt(seats - taken)}`}
-        {queue.count > 0 && ` · Без места остаются: ${formatInt(queue.count)}`}
+      {queue.count > 0 ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-board-line pt-3">
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            width={queueBox.width}
+            height={queueBox.height}
+            viewBox={`${-OUTLINE_PAD} ${-OUTLINE_PAD} ${queueBox.width} ${queueBox.height}`}
+            className="block max-w-full shrink-0"
+          >
+            <defs>
+              <HatchPattern id={hatchId} />
+            </defs>
+            <path d={queue.path} fill={`url(#${hatchId})`} {...HATCH_OUTLINE} />
+          </svg>
+          <p className="text-sm text-board-ink">{`Не хватит мест: ${formatInt(queue.count)}`}</p>
+        </div>
+      ) : null}
+      <p className="text-sm text-board-ink-2">
+        <Swatch className="bg-bar" />
+        {`Занято ${formatInt(taken)} из ${formatInt(seats)} мест · `}
+        <Swatch className="bg-flap-hi" />
+        {`свободно ${formatInt(seats - taken)}`}
       </p>
     </figure>
   );

@@ -17,6 +17,7 @@ import { formatInt, formatSigned } from "../../lib/format";
 import { FLAP_STAGGER_MS, useReducedMotion } from "../../lib/motion";
 import { buildChartModel, type ChartModel, tickLabel } from "./chartData";
 import { type ChartBox, layoutChart, niceTicks } from "./chartGeometry";
+import { HATCH_OUTLINE, HatchPattern, HatchSwatch } from "./Hatch";
 import { TERMS } from "./terms";
 import "./chart.css";
 
@@ -197,16 +198,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
               className={`absolute inset-0 block tabular-nums ${narrow ? "text-axis" : "text-sm"}`}
             >
               <defs>
-                <pattern
-                  id={hatchId}
-                  patternUnits="userSpaceOnUse"
-                  width="6"
-                  height="6"
-                  patternTransform="rotate(45)"
-                >
-                  <rect width="6" height="6" className="fill-board" />
-                  <rect width="2" height="6" className="fill-sign" />
-                </pattern>
+                <HatchPattern id={hatchId} />
               </defs>
 
               {active !== null ? (
@@ -268,8 +260,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                         width={bar.width}
                         height={bar.seatsY - bar.y}
                         fill={`url(#${hatchId})`}
-                        strokeWidth={1.5}
-                        className="stroke-sign"
+                        {...HATCH_OUTLINE}
                       />
                     ) : null}
                     {bar.median && bar.height > 0 ? (
@@ -397,7 +388,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                   Самолёт заполнен
                 </li>
                 <li className="flex items-center gap-2">
-                  <span aria-hidden="true" className="chart-swatch-over size-3 rounded-cell" />
+                  <HatchSwatch />
                   Не хватит мест
                 </li>
                 <li className="flex items-center gap-2">
