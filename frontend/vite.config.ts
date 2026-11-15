@@ -11,8 +11,10 @@ export default defineConfig({
     fs: { allow: [".", "../data"] },
   },
   test: {
-    // vitest stubs CSS imports (even ?raw) to "" unless included; tokens.test.ts reads index.css?raw
-    css: { include: [/index\.css/, /board\.css/] },
+    // vitest stubs CSS imports (even ?raw) to "" unless included. Every stylesheet in src is included
+    // so the tests that read CSS (tokens, flap, hatch, and the design-system scan over all of src)
+    // see the real rules.
+    css: { include: [/\/src\/[^?]*\.css/] },
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
