@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { formatInt } from "../../lib/format";
 import { useReducedMotion } from "../../lib/motion";
-import { HATCH_OUTLINE, HatchPattern } from "./Hatch";
+import { HATCH_OUTLINE, HatchPattern, SHORT_OF_SEATS } from "./Hatch";
 import { seatLayout } from "./seatLayout";
 import "./seatmap.css";
 
@@ -89,12 +89,12 @@ export function SeatMap({ seats, buys, wants }: SeatMapProps): React.JSX.Element
             </defs>
             <path d={queue.path} fill={`url(#${hatchId})`} {...HATCH_OUTLINE} />
           </svg>
-          <p className="text-sm text-board-ink">{`Не хватит мест: ${formatInt(queue.count)}`}</p>
+          <p className="text-sm text-board-ink">{`${SHORT_OF_SEATS}: ${formatInt(queue.count)}`}</p>
         </div>
       ) : null}
       <p className="text-sm text-board-ink-2">
         <Swatch className="bg-bar" />
-        {`Занято ${formatInt(taken)} из ${formatInt(seats)} мест · `}
+        {`Занято ${formatInt(taken)} из\u00a0${formatInt(seats)} мест · `}
         <Swatch className="bg-flap-hi" />
         {`свободно ${formatInt(seats - taken)}`}
       </p>

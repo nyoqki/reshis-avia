@@ -20,6 +20,9 @@ export function HatchPattern({ id }: { id: string }) {
   );
 }
 
+/** What the hatch marks, in the chart legend and at the seat map queue alike. */
+export const SHORT_OF_SEATS = "Не\u00a0хватит мест";
+
 /** The yellow outline around a hatched shape. */
 export const HATCH_OUTLINE = { strokeWidth: 1.5, className: "stroke-sign" } as const;
 

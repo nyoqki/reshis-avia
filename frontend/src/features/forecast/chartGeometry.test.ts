@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ForecastResponse } from "../../api/types";
 import { type BarKind, buildChartModel, type ChartModel } from "./chartData";
-import { type ChartBox, layoutChart, niceTicks } from "./chartGeometry";
+import { axisTicks, type ChartBox, layoutChart, niceTicks } from "./chartGeometry";
 
 const BOX: ChartBox = { width: 600, height: 300, top: 20, right: 10, bottom: 40, left: 50 };
 
@@ -133,5 +133,17 @@ describe("layoutChart", () => {
     expect(g.bars).toEqual([]);
     expect(g.yMax).toBeGreaterThanOrEqual(900);
     expect(g.ticks[0].value).toBe(0);
+  });
+
+  it("TB-AC12: seats within 10 % of the top tick get one more axis step, so the line keeps clear of the top", () => {
+    const near = model([500, 600, 700, 800, 900, 1000, 1100, 1200, 1300], 1440);
+    expect(axisTicks(near).map((t) => t.value)).toEqual([0, 500, 1000, 1500, 2000]);
+    expect(axisTicks(near).at(-1)?.label).toBe("2 000");
+    const g = layoutChart(near, BOX);
+    expect(g.yMax).toBe(2000);
+    expect(g.ticks.map((t) => t.value)).toEqual([0, 500, 1000, 1500, 2000]);
+    // further from the top the nice ticks stay as they are
+    expect(axisTicks(model(VALUES, 1200))).toEqual(niceTicks(1200));
+    expect(axisTicks(model(VALUES, 900))).toEqual(niceTicks(998));
   });
 });

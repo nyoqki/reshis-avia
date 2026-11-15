@@ -65,6 +65,23 @@ export function niceTicks(maxValue: number, maxTicks = 5): AxisTick[] {
   }));
 }
 
+/** Seats closer than this share of the top tick to the top get one more axis step. */
+const SEATS_HEADROOM = 0.1;
+
+/**
+ * The value axis: niceTicks over the largest scenario and the seats, plus one more step when the
+ * seats line would run just under the top tick, so it and its label keep clear of the top.
+ */
+export function axisTicks(model: ChartModel): AxisTick[] {
+  const ticks = niceTicks(Math.max(...model.values, model.seats));
+  const top = ticks[ticks.length - 1].value;
+  const step = ticks.length > 1 ? ticks[1].value - ticks[0].value : top;
+  if (model.seats > 0 && top - model.seats < top * SEATS_HEADROOM) {
+    return [...ticks, { value: top + step, label: formatInt(top + step) }];
+  }
+  return ticks;
+}
+
 export function layoutChart(model: ChartModel, box: ChartBox): ChartGeometry {
   const plot = {
     x: box.left,
@@ -72,7 +89,7 @@ export function layoutChart(model: ChartModel, box: ChartBox): ChartGeometry {
     width: box.width - box.left - box.right,
     height: box.height - box.top - box.bottom,
   };
-  const ticks = niceTicks(Math.max(...model.values, model.seats));
+  const ticks = axisTicks(model);
   const yMax = ticks[ticks.length - 1].value;
   const plotBottom = plot.y + plot.height;
   const yOf = (v: number) => plotBottom - (v / yMax) * plot.height;

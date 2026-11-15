@@ -212,6 +212,107 @@ describe("ScenarioChart", () => {
     });
   });
 
+  it("TB-AC12: an empty chart shows no hover hint, and a focused bar still gets its readout", () => {
+    render(<ScenarioChart result={EMPTY} />);
+    expect(screen.queryByText(/Наведите на столбик/)).toBeNull();
+    screen.getAllByRole("button", { name: /желают/ })[0].focus();
+    expect(screen.getByText(/Желают:\s*0\s*\(по формуле:\s*−3\s500\)/)).toBeVisible();
+  });
+
+  it("TB-AC12: the legend comes right under the plot, then the hint, then the caption", () => {
+    const { container } = render(<ScenarioChart result={RESULT} />);
+    const legend = screen.getByText(/Самолёт заполнен/).closest("ul") as HTMLElement;
+    const hint = screen.getByText(/Наведите на столбик/);
+    const caption = container.querySelector("figcaption") as HTMLElement;
+    const plot = container.querySelector("svg[role=img]")?.parentElement as HTMLElement;
+    expect(plot.nextElementSibling).toBe(legend);
+    const follows = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(legend, hint)).toBe(true);
+    expect(follows(hint, caption)).toBe(true);
+  });
+
+  it("TB-AC12: on a wide chart the seats label ends the dashed line past the plot, clear of grid lines and bars", () => {
+    const { container } = render(<ScenarioChart result={RESULT} />);
+    const svg = screen.getByRole("img");
+    const line = Array.from(container.querySelectorAll("svg line")).find((l) =>
+      l.getAttribute("stroke-dasharray"),
+    );
+    const label = Array.from(svg.querySelectorAll("text")).find((t) =>
+      /Мест:\s*900/.test(t.textContent ?? ""),
+    );
+    const lineEnd = Number(line?.getAttribute("x2"));
+    const labelX = Number(label?.getAttribute("x"));
+    expect(labelX).toBeGreaterThan(lineEnd);
+    // centred on the line's height
+    expect(label).toHaveAttribute("dominant-baseline", "middle");
+    expect(Number(label?.getAttribute("y"))).toBeCloseTo(Number(line?.getAttribute("y1")));
+    // every grid line and every bar stops before the label starts, and the label fits the chart
+    for (const grid of Array.from(svg.querySelectorAll("line"))) {
+      expect(Number(grid.getAttribute("x2"))).toBeLessThanOrEqual(lineEnd);
+    }
+    for (const bar of bars(container)) {
+      expect(Number(bar.getAttribute("x")) + Number(bar.getAttribute("width"))).toBeLessThan(
+        labelX,
+      );
+    }
+    expect(labelX + "Мест: 900".length * 14 * 0.57).toBeLessThanOrEqual(
+      Number(svg.getAttribute("width")),
+    );
+  });
+
+  it("TB-AC12: the scenario table is capped in width, so its numbers sit near their labels", () => {
+    const { container } = render(<ScenarioChart result={RESULT} />);
+    expect(container.querySelector("details")).toHaveClass("max-w-xl");
+  });
+
+  describe("on a phone", () => {
+    // The plot measures its width; 358 px is the board on a 390 px phone.
+    const owner = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
+    afterEach(() => {
+      if (owner) Object.defineProperty(HTMLElement.prototype, "clientWidth", owner);
+      else Reflect.deleteProperty(HTMLElement.prototype, "clientWidth");
+    });
+
+    it("TB-AC12: the scenario names leave the crowded x-axis for the caption", () => {
+      const names = ["пессимистичный", "медиана", "оптимистичный"];
+      const wide = render(<ScenarioChart result={RESULT} />);
+      const wideTexts = wide.container.querySelector("svg[role=img]")?.textContent ?? "";
+      for (const name of names) expect(wideTexts).toContain(name);
+      wide.unmount();
+
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        get: () => 358,
+      });
+      const { container } = render(<ScenarioChart result={RESULT} />);
+      const texts = container.querySelector("svg[role=img]")?.textContent ?? "";
+      for (const name of names) expect(texts).not.toContain(name);
+      const caption = container.querySelector("figcaption");
+      expect(caption).toHaveTextContent(/10\s?% вероятности/);
+      expect(caption).toHaveTextContent(
+        /10\s%\s—\sпессимистичный, 50\s%\s—\sмедиана, 90\s%\s—\sоптимистичный/,
+      );
+    });
+
+    it("TB-AC12: grid lines run too close for the seats label in the plot, so the legend right under the axis names the dashed line", () => {
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        get: () => 358,
+      });
+      const { container } = render(<ScenarioChart result={RESULT} />);
+      const svg = container.querySelector("svg[role=img]") as SVGSVGElement;
+      expect(svg.textContent).not.toMatch(/Мест:/);
+      const dashed = Array.from(svg.querySelectorAll("line")).filter((l) =>
+        l.getAttribute("stroke-dasharray"),
+      );
+      expect(dashed).toHaveLength(1);
+      const legend = screen.getByText(/Мест в самолёте:\s*900/);
+      expect(legend.closest("ul")).toBe(svg.parentElement?.nextElementSibling);
+      expect(legend.querySelector(".border-dashed")).not.toBeNull();
+    });
+  });
+
   it("TB-AC12/TB-AC16: with IntersectionObserver the bars wait hidden, then grow once the chart scrolls into view", () => {
     const callbacks: Array<(entries: Partial<IntersectionObserverEntry>[]) => void> = [];
     vi.stubGlobal(

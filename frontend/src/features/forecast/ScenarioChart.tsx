@@ -16,8 +16,8 @@ import { TermHint } from "../../components/ui/TermHint";
 import { formatInt, formatSigned } from "../../lib/format";
 import { FLAP_STAGGER_MS, useReducedMotion } from "../../lib/motion";
 import { buildChartModel, type ChartModel, tickLabel } from "./chartData";
-import { type ChartBox, layoutChart, niceTicks } from "./chartGeometry";
-import { HATCH_OUTLINE, HatchPattern, HatchSwatch } from "./Hatch";
+import { axisTicks, type ChartBox, layoutChart } from "./chartGeometry";
+import { HATCH_OUTLINE, HatchPattern, HatchSwatch, SHORT_OF_SEATS } from "./Hatch";
 import { TERMS } from "./terms";
 import "./chart.css";
 
@@ -26,11 +26,21 @@ const NBSP = "\u00a0";
 const CHART_HEIGHT = 280;
 /** jsdom and the first render before a measurement have no width. */
 const FALLBACK_WIDTH = 640;
-/** Below this chart width the axis text drops from 14 px to 12 px (--text-axis). */
+/**
+ * Below this chart width the axis text drops from 14 px to 12 px (--text-axis) and the scenario
+ * names move from the x-axis to the caption: nine columns leave them no room on a phone.
+ */
 const NARROW_WIDTH = 480;
 const SEATS_DASH = "6 4";
+/** Gap between the end of the seats line and its label; the label runs about 0.57 em a character. */
+const SEATS_LABEL_GAP = 6;
+const LABEL_EM = 0.57;
 
-const HINT = "Наведите на столбик, коснитесь его или нажмите Tab\u00a0— появятся точные числа.";
+const HINT = `Наведите на${NBSP}столбик, коснитесь его или нажмите Tab${NBSP}— появятся точные числа.`;
+const CAPTION = `Между соседними столбиками${NBSP}— 10${NBSP}% вероятности`;
+// On a phone the scenario names leave the x-axis and are spelled out here.
+const CAPTION_NARROW = `${CAPTION}. Сценарий 10${NBSP}%${NBSP}— пессимистичный, 50${NBSP}%${NBSP}— медиана, 90${NBSP}%${NBSP}— оптимистичный.`;
+const EMPTY_NOTE = `Спрос нулевой во${NBSP}всех девяти сценариях, поэтому столбиков нет. Снизьте цену, чтобы увидеть распределение.`;
 
 interface ScenarioRow {
   quantile: number;
@@ -114,19 +124,27 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
   const narrow = width < NARROW_WIDTH;
   const axisPx = narrow ? 12 : 14;
 
+  // «Мест: N» ends the seats line in a margin right of the plot, where no grid line or bar runs
+  // however close the seats come to them. A phone has no width to spare for that margin, and its
+  // grid lines run too close together for the label inside: there the legend under the axis names
+  // the line.
+  const seatsText = `Мест: ${formatInt(model.seats)}`;
+  const seatsTextWidth = Math.ceil(seatsText.length * axisPx * LABEL_EM);
+
   const geometry = useMemo(() => {
-    const ticks = niceTicks(Math.max(...model.values, model.seats));
+    const ticks = axisTicks(model);
     const longest = Math.max(...ticks.map((t) => t.label.length));
     const box: ChartBox = {
       width,
       height: CHART_HEIGHT,
       top: 24,
-      right: 4,
-      bottom: axisPx * 2 + 16,
+      right: narrow ? 4 : seatsTextWidth + SEATS_LABEL_GAP * 2,
+      // one line of percentages on a phone, a second line of scenario names on wider charts
+      bottom: narrow ? axisPx + 12 : axisPx * 2 + 16,
       left: Math.ceil(longest * axisPx * 0.6) + 10,
     };
     return layoutChart(model, box);
-  }, [model, width, axisPx]);
+  }, [model, width, axisPx, narrow, seatsTextWidth]);
 
   const { plot, bars } = geometry;
   const count = bars.length;
@@ -286,15 +304,17 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                 strokeDasharray={SEATS_DASH}
                 className="stroke-board-ink"
               />
-              {/* on the left, where the pessimistic bars are usually below the line */}
-              <text
-                x={plot.x + 4}
-                y={geometry.seatsY - 6}
-                textAnchor="start"
-                className="chart-halo fill-board-ink font-semibold"
-              >
-                {`Мест: ${formatInt(model.seats)}`}
-              </text>
+              {narrow ? null : (
+                <text
+                  x={plot.x + plot.width + SEATS_LABEL_GAP}
+                  y={geometry.seatsY}
+                  dominantBaseline="middle"
+                  textAnchor="start"
+                  className="fill-board-ink font-semibold"
+                >
+                  {seatsText}
+                </text>
+              )}
 
               {bars.map((bar) => {
                 const tick = tickLabel(result.scenarios[bar.index]?.quantile ?? 0);
@@ -307,7 +327,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                     <text x={centre} y={plotBottom + axisPx + 6} textAnchor="middle">
                       {pct}
                     </text>
-                    {name ? (
+                    {name && !narrow ? (
                       // the edge names are longer than a column: pin them to the plot edges
                       <text
                         x={first ? plot.x : last ? plot.x + plot.width : centre}
@@ -358,27 +378,10 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                 className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-control border border-board-line bg-flap px-4 py-3 text-center text-sm text-board-ink"
                 style={{ left: plot.x, width: plot.width }}
               >
-                Спрос нулевой во всех девяти сценариях, поэтому столбиков нет. Снизьте цену, чтобы
-                увидеть распределение.
+                {EMPTY_NOTE}
               </p>
             ) : null}
           </div>
-
-          {count > 0 ? (
-            <div className="flex min-h-11 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-              {active !== null ? (
-                <>
-                  <span className="font-semibold">{model.labels[active]}</span>
-                  <span>
-                    {`Желают: ${formatInt(model.values[active])}${raw < 0 ? ` (по формуле: ${formatSigned(raw)})` : ""}`}
-                  </span>
-                  <span>{`Купят: ${formatInt(result.scenarios[active]?.buys ?? 0)}`}</span>
-                </>
-              ) : (
-                <span className="text-board-ink-2">{HINT}</span>
-              )}
-            </div>
-          ) : null}
 
           <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-board-ink-2">
             {model.empty ? null : (
@@ -389,7 +392,7 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
                 </li>
                 <li className="flex items-center gap-2">
                   <HatchSwatch />
-                  Не хватит мест
+                  {SHORT_OF_SEATS}
                 </li>
                 <li className="flex items-center gap-2">
                   <span aria-hidden="true" className="size-3 rounded-cell bg-bar" />
@@ -406,17 +409,35 @@ export function ScenarioChart({ result }: { result: ForecastResponse }) {
             )}
             <li className="flex items-center gap-2">
               <span aria-hidden="true" className="w-6 border-t-2 border-dashed border-board-ink" />
-              {`Мест в самолёте: ${formatInt(model.seats)}`}
+              {`Мест в${NBSP}самолёте: ${formatInt(model.seats)}`}
             </li>
           </ul>
 
+          {/* Two lines on a phone, one from sm up: the readout replaces the hint without a jump.
+              With no bars to hover in an empty chart, only a focused bar brings the readout. */}
+          {count > 0 && (active !== null || !model.empty) ? (
+            <div className="flex min-h-10 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm sm:min-h-5">
+              {active !== null ? (
+                <>
+                  <span className="font-semibold">{model.labels[active]}</span>
+                  <span>
+                    {`Желают: ${formatInt(model.values[active])}${raw < 0 ? ` (по формуле: ${formatSigned(raw)})` : ""}`}
+                  </span>
+                  <span>{`Купят: ${formatInt(result.scenarios[active]?.buys ?? 0)}`}</span>
+                </>
+              ) : (
+                <span className="text-board-ink-2">{HINT}</span>
+              )}
+            </div>
+          ) : null}
+
           <figcaption className="text-sm text-board-ink-2">
-            {`Между соседними столбиками — 10${NBSP}% вероятности`}
+            {narrow ? CAPTION_NARROW : CAPTION}
           </figcaption>
         </figure>
       </Board>
 
-      <details open className="rounded-board border border-line bg-paper-raised px-4">
+      <details open className="max-w-xl rounded-board border border-line bg-paper-raised px-4">
         <summary className="cursor-pointer py-3 text-sm font-medium">Таблица сценариев</summary>
         <div className="overflow-x-auto pb-3">
           <DataTable columns={COLUMNS} rows={rows} rowKey={(row) => row.quantile} />

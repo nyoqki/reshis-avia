@@ -26,14 +26,6 @@
   }
 }
 
-/* a board-coloured halo keeps the seats label readable where it crosses a bar */
-.chart-halo {
-  paint-order: stroke;
-  stroke: var(--color-board);
-  stroke-width: 4px;
-  stroke-linejoin: round;
-}
-
 /* the column buttons sit edge to edge: keep the focus ring inside the column */
 .chart-hit:focus-visible {
   outline-offset: -2px;
