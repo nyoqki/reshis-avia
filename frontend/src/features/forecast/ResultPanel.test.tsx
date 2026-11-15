@@ -158,4 +158,90 @@ describe("ResultPanel", () => {
     expect(onUse).toHaveBeenCalledTimes(1);
     expect(onUse).toHaveBeenCalledWith(9500);
   });
+
+  it("AC10: the board header shows the flight line, the date and the price", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    const heading = screen.getByRole("heading", { level: 2, name: "Результат прогноза" });
+    const header = heading.parentElement as HTMLElement;
+    expect(header).toHaveTextContent("Москва MOW → Сочи AER");
+    expect(header).toHaveTextContent("12 июня 2026");
+    expect(header.textContent).toMatch(/9\s000\s₽/);
+  });
+
+  it("AC10: the status line reads «Есть места», «Мест нет» or «Нет спроса»", () => {
+    const none: ForecastResponse = { ...CONTROL, limit: "none", buys: 800, free_seats: 100 };
+    const { unmount } = render(<ResultPanel result={SEATS} onUseRecommended={() => {}} />);
+    expect(screen.getByText("Мест нет")).toBeInTheDocument();
+    unmount();
+    const second = render(<ResultPanel result={none} onUseRecommended={() => {}} />);
+    expect(screen.getByText("Есть места")).toBeInTheDocument();
+    second.unmount();
+    render(<ResultPanel result={NO_DEMAND} onUseRecommended={() => {}} />);
+    expect(screen.getByText("Нет спроса")).toBeInTheDocument();
+  });
+
+  it("AC10: each card's flap layer is aria-hidden and the card text is only label plus final value", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    const expected: Record<string, string> = {
+      "Мест в самолёте": "900",
+      "Желают купить": "970",
+      "Купят": "900",
+      "Свободно": "0",
+    };
+    for (const [label, value] of Object.entries(expected)) {
+      const c = card(label);
+      expect(c.querySelector("[aria-hidden='true']")).not.toBeNull();
+      expect(c.textContent?.replace(/\s+/g, "")).toBe(`${label}${value}`.replace(/\s+/g, ""));
+      const next = screen.getByText(label).nextElementSibling;
+      expect(next?.tagName).toBe("SPAN");
+      expect(next).toHaveTextContent(value);
+    }
+  });
+
+  it("AC14: while pending, «Подставить» is aria-disabled and a click does nothing", async () => {
+    const onUse = vi.fn();
+    const user = userEvent.setup();
+    render(<ResultPanel result={CONTROL} onUseRecommended={onUse} pending />);
+    const button = screen.getByRole("button", { name: "Подставить" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    await user.click(button);
+    expect(onUse).not.toHaveBeenCalled();
+  });
+
+  it("AC14: without pending «Подставить» is not aria-disabled", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    expect(screen.getByRole("button", { name: "Подставить" })).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
+  it("AC15: term hint buttons exist for every figure, the risky one only for a risky flight", () => {
+    const { rerender } = render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    for (const term of [
+      "Желают купить",
+      "Купят",
+      "Свободно",
+      "Вероятность распродажи",
+      "Рекомендуемая цена и коридор",
+    ]) {
+      expect(screen.getByRole("button", { name: `Что значит «${term}»` })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: "Что значит «Рискованный рейс»" })).toBeNull();
+    rerender(
+      <ResultPanel
+        result={{ ...CONTROL, recommendation: { ...CONTROL.recommendation, risky: true } }}
+        onUseRecommended={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Что значит «Рискованный рейс»" }),
+    ).toBeInTheDocument();
+  });
+
+  it("AC11: the seat map caption is present", () => {
+    render(<ResultPanel result={CONTROL} onUseRecommended={() => {}} />);
+    expect(screen.getByText(/Занято\s+900\s+из\s+900\s+мест/)).toBeInTheDocument();
+  });
 });
