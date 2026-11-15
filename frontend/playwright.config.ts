@@ -36,6 +36,8 @@ export default defineConfig({
         isMobile: true,
         hasTouch: true,
       },
+      // Tests tagged @desktop need the labelled header controls, which the phone layout hides.
+      grepInvert: /@desktop/,
     },
   ],
 });

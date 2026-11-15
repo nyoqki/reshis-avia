@@ -228,8 +228,8 @@ test("AC9/AC16: with reduced motion the login screen shows the plane still and n
   await expect(page.locator("canvas")).toHaveCount(0);
 });
 
-test("AC17: the «Тёмная» segment switches the theme", async ({ page }) => {
-  test.skip(isMobile(page), "the phone header shows icons only; the labelled segments are desktop");
+// The phone header shows icons only; the labelled segments are desktop, so this test is tagged @desktop.
+test("AC17: the «Тёмная» segment switches the theme", { tag: "@desktop" }, async ({ page }) => {
   await demoLogin(page);
   const banner = page.getByRole("banner");
   await banner.getByText("Тёмная", { exact: true }).click();
